@@ -16,5 +16,6 @@
     "react-dom": "latest",
     "three": "0.180.0",
     "vite": "latest"
-  }
+  },
+  "packageManager": "pnpm@10.33.2"
 }
