@@ -1,0 +1,22 @@
+# Dependencies and generated builds
+node_modules/
+dist/
+.vite/
+
+# Environment and deployment
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Operating-system and log files
+.DS_Store
+*.log
+
+# Local project backups
+.backups/
+.tmp-*/
+*.before-*
+*.backup-*
+*.bak
+.ring-lab-*-backup

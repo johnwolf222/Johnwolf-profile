@@ -1,0 +1,28 @@
+{
+  "projects": [
+    {
+      "title": "Riches Cosmetics",
+      "category": "Luxury cosmetics identity",
+      "description": "A 27-page confidence-led identity system built around control, restraint, clarity, and quiet visual authority.",
+      "image": "/assets/brand-guidelines/projects/riches-cosmetics-cover.jpg",
+      "pdf": "/assets/brand-guidelines/projects/riches-cosmetics-brand-guidelines.pdf",
+      "pages": 27
+    },
+    {
+      "title": "Chick Muy Caliente",
+      "category": "Food brand identity",
+      "description": "A bold 17-page system covering brand essence, mascot use, voice, typography, color, heat levels, imagery, and iconography.",
+      "image": "/assets/brand-guidelines/projects/chick-muy-caliente-cover.jpg",
+      "pdf": "/assets/brand-guidelines/projects/chick-muy-caliente-brand-guidelines.pdf",
+      "pages": 17
+    },
+    {
+      "title": "Bellora Design Studio",
+      "category": "Luxury interior identity",
+      "description": "A refined identity presentation featuring logo direction, alternative mark, color palette, and typography for an elevated interior studio.",
+      "image": "/assets/brand-guidelines/projects/bellora-design-studio-cover.jpg",
+      "pdf": "/assets/brand-guidelines/projects/bellora-design-studio-brand-guidelines.pdf",
+      "pages": 5
+    }
+  ]
+}

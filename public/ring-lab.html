@@ -1,0 +1,3921 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>John Wolf — Rings Geometry Lab</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      --pink: #ef77bb;
+      --violet: #765cff;
+      --blue: #1738cf;
+      --ink: #04040a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+      color: #fff;
+    }
+
+    body { overscroll-behavior: none; }
+    button, a { color: inherit; font: inherit; }
+
+    .rings-lab {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      isolation: isolate;
+      background: #04040a;
+    }
+
+    .rings-background-video {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+      object-position: center;
+
+      filter:
+        saturate(1.04)
+        contrast(1.06)
+        brightness(0.64);
+
+      transform: scale(1.01);
+    }
+
+    .rings-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    .rings-canvas.is-dragging { cursor: grabbing; }
+
+    .rings-lab::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.24), transparent 16%, transparent 80%, rgba(0,0,0,.28)),
+        radial-gradient(circle at center, transparent 62%, rgba(0,0,0,.16));
+    }
+
+    .lab-topbar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      min-height: 5.3rem;
+      padding: 1rem clamp(1.25rem, 4vw, 3.5rem);
+      border-bottom: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(4,5,24,.72), rgba(4,5,24,.18));
+      backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .lab-logo {
+      font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+      font-weight: 820;
+      letter-spacing: -.08em;
+    }
+
+    .lab-logo span { color: var(--pink); }
+
+    .lab-heading {
+      justify-self: center;
+      color: rgba(255,255,255,.58);
+      font-size: .61rem;
+      font-weight: 760;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .back-link {
+      justify-self: end;
+      padding: .72rem 1rem;
+      border: 1px solid rgba(255,255,255,.58);
+      border-radius: .58rem;
+      background: rgba(4,5,24,.36);
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    .lab-footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.2rem clamp(1.25rem, 4vw, 3.5rem);
+      color: rgba(255,255,255,.76);
+      pointer-events: none;
+    }
+
+    .lab-caption,
+    .lab-count,
+    .lab-instruction,
+    .model-credit {
+      font-size: .58rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .lab-count { justify-self: center; letter-spacing: .04em; text-transform: none; }
+
+    .lab-instruction {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+
+    .lab-instruction::after {
+      content: '';
+      width: 3.8rem;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,.72), transparent);
+    }
+
+    .model-credit {
+      position: absolute;
+      left: clamp(1.25rem, 4vw, 3.5rem);
+      bottom: 2.8rem;
+      z-index: 30;
+      color: rgba(255,255,255,.34);
+      font-size: .45rem;
+      letter-spacing: .08em;
+      text-transform: none;
+      text-decoration: none;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 25;
+      display: grid;
+      place-items: center;
+      background: rgba(4, 4, 10, .24);
+      backdrop-filter: blur(8px);
+      transition: opacity .7s ease, visibility .7s ease;
+      pointer-events: none;
+    }
+
+    .loading.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loading span {
+      color: rgba(255,255,255,.72);
+      font-size: .62rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .hover-label {
+      position: fixed;
+      z-index: 2147483646;
+
+      max-width: none;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+
+      color: #fff;
+
+      font-size: .67rem;
+      font-weight: 760;
+      line-height: 1;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+
+      opacity: 0;
+      visibility: hidden;
+
+      transform: translate(23px, -50%);
+
+      transition:
+        opacity .18s ease,
+        visibility .18s ease,
+        transform .22s ease;
+
+      pointer-events: none;
+      white-space: nowrap;
+
+      text-shadow:
+        0 2px 10px rgba(0, 0, 0, .96),
+        0 0 18px rgba(0, 0, 0, .72);
+    }
+
+    .hover-label.is-visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* =====================================================
+       LOGO DETAIL — STAGE 2 CINEMATIC ENTRANCE
+       ===================================================== */
+
+    .logo-detail-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+
+      opacity: 0;
+      visibility: hidden;
+
+      background:
+        rgba(2, 2, 8, 0);
+
+      backdrop-filter:
+        blur(0)
+        saturate(1)
+        brightness(1);
+
+      -webkit-backdrop-filter:
+        blur(0)
+        saturate(1)
+        brightness(1);
+
+      pointer-events: none;
+
+      transition:
+        opacity 1000ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        visibility 1000ms,
+        background-color 1000ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        backdrop-filter 1100ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        -webkit-backdrop-filter 1100ms
+          cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .logo-detail-backdrop.is-active {
+      opacity: 1;
+      visibility: visible;
+
+      background:
+        rgba(2, 2, 8, 0.34);
+
+      backdrop-filter:
+        blur(14px)
+        saturate(0.78)
+        brightness(0.66);
+
+      -webkit-backdrop-filter:
+        blur(14px)
+        saturate(0.78)
+        brightness(0.66);
+    }
+
+    .logo-detail-card {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 2000;
+
+      visibility: hidden;
+      opacity: 0;
+
+      transform-origin: 0 0;
+      perspective: 1500px;
+
+      pointer-events: none;
+
+      will-change:
+        transform,
+        opacity;
+    }
+
+    .logo-detail-card.is-active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .logo-detail-card-inner {
+      position: relative;
+
+      width: 100%;
+      height: 100%;
+
+      transform-style: preserve-3d;
+      transform-origin: center;
+
+      will-change: transform;
+    }
+
+    .logo-detail-card-face {
+      position: absolute;
+      inset: 0;
+
+      overflow: hidden;
+
+      border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+
+      border-radius: 0.55rem;
+
+      background: #070711;
+
+      box-shadow:
+        0 2rem 5rem
+          rgba(0, 0, 0, 0.46),
+        0 0 0 1px
+          rgba(255, 255, 255, 0.035);
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .logo-detail-card-front {
+      transform: rotateY(0deg);
+    }
+
+    .logo-detail-card-back {
+      transform: rotateY(180deg);
+    }
+
+    .logo-detail-card-face img {
+      display: block;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    @media (max-width: 760px) {
+      .logo-detail-backdrop.is-active {
+        backdrop-filter:
+          blur(10px)
+          saturate(0.8)
+          brightness(0.64);
+
+        -webkit-backdrop-filter:
+          blur(10px)
+          saturate(0.8)
+          brightness(0.64);
+      }
+    }
+
+    /* =====================================================
+       LOGO DETAIL — STAGE 3 PROJECT INFORMATION
+       ===================================================== */
+
+    .logo-detail-information {
+      position: fixed;
+      z-index: 1900;
+
+      width: min(42rem, 45vw);
+      max-height: calc(100vh - 9.5rem);
+      overflow: hidden;
+
+      opacity: 0;
+      visibility: hidden;
+
+      transform:
+        translate3d(
+          var(--information-start-x, -9rem),
+          var(--information-y, -50%),
+          0
+        );
+
+      clip-path:
+        inset(0 100% 0 0);
+
+      filter: blur(8px);
+
+      pointer-events: none;
+
+      transition:
+        opacity 620ms ease,
+        visibility 900ms,
+        transform 920ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        clip-path 900ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        filter 720ms ease;
+
+      will-change:
+        opacity,
+        transform,
+        clip-path,
+        filter;
+    }
+
+    .logo-detail-information.is-prepared {
+      visibility: visible;
+    }
+
+    .logo-detail-information.is-revealed {
+      opacity: 1;
+
+      transform:
+        translate3d(
+          0,
+          var(--information-y, -50%),
+          0
+        );
+
+      clip-path:
+        inset(0 0 0 0);
+
+      filter: blur(0);
+    }
+
+    .logo-detail-information-header {
+      margin-bottom:
+        clamp(1.35rem, 2.6vw, 2.6rem);
+    }
+
+    .logo-detail-information-index,
+    .logo-detail-information-label {
+      display: block;
+
+      color:
+        rgba(255, 255, 255, 0.52);
+
+      font-size: 0.58rem;
+      font-weight: 760;
+      line-height: 1;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .logo-detail-information-index {
+      margin-bottom: 1rem;
+    }
+
+    .logo-detail-information-name-label {
+      margin-bottom: 0.7rem;
+
+      color:
+        rgba(239, 119, 187, 0.94);
+    }
+
+    .logo-detail-information h2 {
+      max-width: 12ch;
+      margin: 0;
+
+      color: #fff;
+
+      font-size:
+        clamp(2.65rem, 4.7vw, 5.35rem);
+
+      font-weight: 790;
+      line-height: 0.91;
+      letter-spacing: -0.064em;
+
+      text-wrap: balance;
+    }
+
+    .logo-detail-information-copy {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap:
+        clamp(1.5rem, 3vw, 3.25rem);
+
+      padding-top:
+        clamp(1.35rem, 2.2vw, 2.1rem);
+
+      border-top:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+    }
+
+    .logo-detail-information-section {
+      min-width: 0;
+    }
+
+    .logo-detail-information-section p {
+      margin:
+        0.82rem
+        0
+        0;
+
+      color:
+        rgba(255, 255, 255, 0.79);
+
+      font-size:
+        clamp(0.78rem, 0.95vw, 0.96rem);
+
+      line-height: 1.68;
+      letter-spacing: -0.012em;
+    }
+
+    .logo-detail-information-section:last-child
+    .logo-detail-information-label {
+      color:
+        rgba(154, 136, 255, 0.98);
+    }
+
+    @media (max-width: 1100px) {
+      .logo-detail-information {
+        width: min(34rem, 45vw);
+        overflow-y: auto;
+      }
+
+      .logo-detail-information h2 {
+        font-size:
+          clamp(2.15rem, 4.3vw, 4.15rem);
+      }
+
+      .logo-detail-information-copy {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .logo-detail-information {
+        width: calc(100vw - 2.5rem);
+        max-height: 42vh;
+
+        overflow-y: auto;
+
+        --information-y: 0;
+        --information-start-x: -3rem;
+      }
+
+      .logo-detail-information h2 {
+        max-width: 15ch;
+
+        font-size:
+          clamp(2rem, 9vw, 3.3rem);
+      }
+
+      .logo-detail-information-copy {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =====================================================
+       LOGO DETAIL — STAGE 4 NAVIGATION
+       ===================================================== */
+
+    .logo-detail-navigation {
+      position: fixed;
+      z-index: 2050;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+
+      opacity: 0;
+      visibility: hidden;
+
+      transform:
+        translate3d(-50%, 1rem, 0);
+
+      pointer-events: none;
+
+      transition:
+        opacity 320ms ease,
+        visibility 320ms,
+        transform 520ms
+          cubic-bezier(0.16, 1, 0.3, 1);
+
+      will-change:
+        opacity,
+        transform;
+    }
+
+    .logo-detail-navigation.is-visible {
+      opacity: 1;
+      visibility: visible;
+
+      transform:
+        translate3d(-50%, 0, 0);
+
+      pointer-events: auto;
+    }
+
+    .logo-detail-navigation.is-busy {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
+    .logo-detail-navigation button,
+    .logo-detail-close {
+      display: grid;
+      place-items: center;
+
+      border:
+        1px solid
+        rgba(255, 255, 255, 0.32);
+
+      background:
+        rgba(5, 5, 13, 0.54);
+
+      color: #fff;
+
+      backdrop-filter:
+        blur(14px);
+
+      -webkit-backdrop-filter:
+        blur(14px);
+
+      transition:
+        transform 240ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 220ms ease,
+        background-color 220ms ease,
+        opacity 220ms ease;
+
+      pointer-events: auto;
+    }
+
+    .logo-detail-navigation button {
+      width: 3.15rem;
+      height: 3.15rem;
+
+      padding: 0;
+
+      border-radius: 50%;
+
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .logo-detail-navigation button:hover,
+    .logo-detail-close:hover {
+      border-color:
+        rgba(255, 255, 255, 0.86);
+
+      background:
+        rgba(255, 255, 255, 0.1);
+
+      transform:
+        scale(1.08);
+    }
+
+    .logo-detail-navigation button:active,
+    .logo-detail-close:active {
+      transform:
+        scale(0.94);
+    }
+
+    .logo-detail-navigation button:disabled,
+    .logo-detail-close:disabled {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
+    .logo-detail-close {
+      position: fixed;
+      top: 6.65rem;
+      right:
+        clamp(1.25rem, 3.5vw, 3.5rem);
+
+      z-index: 2100;
+
+      width: 2.9rem;
+      height: 2.9rem;
+
+      padding: 0;
+
+      border-radius: 50%;
+
+      opacity: 0;
+      visibility: hidden;
+
+      transform:
+        scale(0.76)
+        rotate(-28deg);
+
+      pointer-events: none;
+
+      font-size: 1.55rem;
+      font-weight: 300;
+      line-height: 1;
+
+      transition:
+        opacity 320ms ease,
+        visibility 320ms,
+        transform 520ms
+          cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 220ms ease,
+        background-color 220ms ease;
+    }
+
+    .logo-detail-close.is-visible {
+      opacity: 1;
+      visibility: visible;
+
+      transform:
+        scale(1)
+        rotate(0deg);
+
+      pointer-events: auto;
+    }
+
+    @media (max-width: 760px) {
+      .logo-detail-close {
+        top: 5.8rem;
+        right: 1rem;
+
+        width: 2.6rem;
+        height: 2.6rem;
+      }
+
+      .logo-detail-navigation button {
+        width: 2.85rem;
+        height: 2.85rem;
+      }
+    }
+
+    /*
+      Custom Rings cursor:
+
+      Default:
+      Small solid white circle.
+
+      Image hover:
+      Larger transparent circle with a white outline.
+    */
+
+    @media (hover: hover) and (pointer: fine) {
+      html,
+      body,
+      body *,
+      .rings-canvas,
+      .rings-canvas.is-dragging {
+        cursor: none !important;
+      }
+
+      .rings-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 2147483647;
+
+        width: 14px;
+        height: 14px;
+
+        border: 1.5px solid transparent;
+        border-radius: 50%;
+
+        background: #fff;
+
+        pointer-events: none;
+
+        opacity: 0;
+
+        transform:
+          translate3d(-100px, -100px, 0)
+          translate(-50%, -50%);
+
+        transition:
+          width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          height 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          background-color 220ms ease,
+          border-color 220ms ease,
+          opacity 180ms ease;
+
+        will-change:
+          transform,
+          width,
+          height;
+      }
+
+      .rings-cursor.is-visible {
+        opacity: 1;
+      }
+
+      /*
+        Keep the same white dot while hovering a logo.
+        The logo title is revealed by the hover label.
+      */
+      .rings-cursor.is-image-hover {
+        width: 28px;
+        height: 28px;
+
+        border-color: rgba(255, 255, 255, .96);
+        background: transparent;
+
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, .18),
+          0 0 18px rgba(255, 255, 255, .14);
+      }
+    }
+
+    @media (hover: none), (pointer: coarse) {
+      .rings-cursor {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .lab-topbar { grid-template-columns: auto 1fr; }
+      .lab-heading { display: none; }
+      .lab-caption { display: none; }
+      .lab-footer { grid-template-columns: 1fr auto; }
+      .lab-count { justify-self: start; }
+      .model-credit { display: none; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/assets/ring-lab-home-nav.css" />
+</head>
+
+<body>
+  <main class="rings-lab" id="ringsLab">
+    <video
+      class="rings-background-video"
+      id="ringsBackgroundVideo"
+      muted
+      loop
+      autoplay
+      playsinline
+      poster="/assets/carousel/packaging.jpg"
+      aria-hidden="true"
+    >
+      <source
+        src="/assets/carousel/packaging.mp4"
+        type="video/mp4"
+      />
+    </video>
+
+    <canvas class="rings-canvas" id="ringsCanvas" aria-label="Rotating rings portfolio gallery"></canvas>
+
+    <header class="site-header global-site-header is-over-project-page">
+      <div class="logo-page-brand">
+        <a class="monogram" href="/#home" aria-label="John Wolf home">
+          JW<span>.</span>
+        </a>
+
+        <span class="logo-page-title">
+          Logo Database
+        </span>
+      </div>
+
+      <button
+        class="menu-toggle"
+        id="ringsMenuToggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+        aria-label="Open navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+        <span class="rings-nav-sr-only">Toggle navigation</span>
+      </button>
+
+      <nav
+        class="primary-navigation"
+        id="primary-navigation"
+        aria-label="Primary navigation"
+      >
+        <a href="/#home">Home</a>
+        <a href="/#about">About</a>
+        <a href="/#services">Services</a>
+        <a class="is-active" href="/#portfolio" aria-current="page">Portfolio</a>
+        <a href="/#testimonials">Testimonials</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+
+      <button class="header-cta" id="ringsHeaderCta" type="button">
+        Start a Project
+        <span aria-hidden="true">↗</span>
+      </button>
+    </header>
+
+    <footer class="lab-footer">
+      <span class="lab-caption">Brand &amp; Digital Design Studio</span>
+      <span class="lab-count" id="labCount">01 / 32 selected works</span>
+      <span class="lab-instruction">Scroll or drag to rotate</span>
+    </footer>
+
+    <a
+      class="model-credit"
+      href="https://sketchfab.com/3d-models/apple-ipad-pro-e5ffb3c80b2d4d6690249f8ee2bdafbe"
+      target="_blank"
+      rel="noreferrer"
+    >iPad model: DatSketch · CC BY-NC 4.0</a>
+
+    <div class="loading" id="loading"><span>Building the five-ring gallery</span></div>
+
+    <div
+      class="logo-detail-backdrop"
+      id="logoDetailBackdrop"
+      aria-hidden="true"
+    ></div>
+
+    <div
+      class="logo-detail-card"
+      id="logoDetailCard"
+      aria-hidden="true"
+    >
+      <div
+        class="logo-detail-card-inner"
+        id="logoDetailCardInner"
+      >
+        <div
+          class="logo-detail-card-face logo-detail-card-front"
+        >
+          <img
+            id="logoDetailCardFrontImage"
+            src=""
+            alt=""
+            draggable="false"
+          />
+        </div>
+
+        <div
+          class="logo-detail-card-face logo-detail-card-back"
+        >
+          <img
+            id="logoDetailCardBackImage"
+            src=""
+            alt=""
+            draggable="false"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="logo-detail-navigation"
+      id="logoDetailNavigation"
+      aria-hidden="true"
+    >
+      <button
+        id="logoDetailPrevious"
+        type="button"
+        aria-label="Previous logo project"
+        title="Previous project"
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+
+      <button
+        id="logoDetailNext"
+        type="button"
+        aria-label="Next logo project"
+        title="Next project"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <button
+      class="logo-detail-close"
+      id="logoDetailClose"
+      type="button"
+      aria-label="Close logo project"
+      title="Close project"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+
+    <article
+      class="logo-detail-information"
+      id="logoDetailInformation"
+      aria-hidden="true"
+    >
+      <header
+        class="logo-detail-information-header"
+      >
+        <span
+          class="logo-detail-information-index"
+          id="logoDetailProjectIndex"
+        ></span>
+
+        <span
+          class="logo-detail-information-label logo-detail-information-name-label"
+        >
+          Name
+        </span>
+
+        <h2 id="logoDetailProjectName"></h2>
+      </header>
+
+      <div class="logo-detail-information-copy">
+        <section
+          class="logo-detail-information-section"
+        >
+          <span
+            class="logo-detail-information-label"
+          >
+            Duty
+          </span>
+
+          <p id="logoDetailProjectDuty"></p>
+        </section>
+
+        <section
+          class="logo-detail-information-section"
+        >
+          <span
+            class="logo-detail-information-label"
+          >
+            Result
+          </span>
+
+          <p id="logoDetailProjectResult"></p>
+        </section>
+      </div>
+    </article>
+
+    <div class="hover-label" id="hoverLabel"></div>
+
+    <div
+      class="rings-cursor"
+      id="ringsCursor"
+      aria-hidden="true"
+    ></div>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.getElementById('ringsMenuToggle')
+      const navigation = document.getElementById('primary-navigation')
+      const cta = document.getElementById('ringsHeaderCta')
+      const backgroundVideo =
+        document.getElementById('ringsBackgroundVideo')
+
+      const savedBackgroundTime = Number(
+        window.sessionStorage.getItem(
+          'logosBackgroundTime',
+        ),
+      )
+
+      const startBackgroundVideo = () => {
+        if (
+          backgroundVideo &&
+          Number.isFinite(savedBackgroundTime) &&
+          savedBackgroundTime >= 0
+        ) {
+          try {
+            const duration = backgroundVideo.duration
+
+            backgroundVideo.currentTime =
+              Number.isFinite(duration) &&
+              duration > 0
+                ? savedBackgroundTime % duration
+                : savedBackgroundTime
+          } catch {
+            // The poster remains visible until seeking works.
+          }
+        }
+
+        backgroundVideo?.play().catch(() => {})
+
+        window.sessionStorage.removeItem(
+          'logosBackgroundTime',
+        )
+      }
+
+      if (backgroundVideo) {
+        if (backgroundVideo.readyState >= 1) {
+          startBackgroundVideo()
+        } else {
+          backgroundVideo.addEventListener(
+            'loadedmetadata',
+            startBackgroundVideo,
+            { once: true },
+          )
+        }
+      }
+
+      cta?.addEventListener('click', () => {
+        window.location.href = '/#contact'
+      })
+
+      if (!toggle || !navigation) return
+
+      const closeNavigation = () => {
+        toggle.setAttribute('aria-expanded', 'false')
+        toggle.setAttribute('aria-label', 'Open navigation')
+        navigation.classList.remove('is-open')
+      }
+
+      toggle.addEventListener('click', () => {
+        const opening = toggle.getAttribute('aria-expanded') !== 'true'
+        toggle.setAttribute('aria-expanded', String(opening))
+        toggle.setAttribute(
+          'aria-label',
+          opening ? 'Close navigation' : 'Open navigation',
+        )
+        navigation.classList.toggle('is-open', opening)
+      })
+
+      navigation.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeNavigation)
+      })
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 820) closeNavigation()
+      })
+    })()
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three'
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+    import { projectDetails } from '/assets/logo-project-details.js'
+
+    const sources = [
+      { title: 'Logo 01', src: '/assets/ring-lab/logo-cards-clean/logo-card-01.png' },
+      { title: 'Logo 02', src: '/assets/ring-lab/logo-cards-clean/logo-card-02.png' },
+      { title: 'Logo 03', src: '/assets/ring-lab/logo-cards-clean/logo-card-03.png' },
+      { title: 'Logo 04', src: '/assets/ring-lab/logo-cards-clean/logo-card-04.png' },
+      { title: 'Logo 06', src: '/assets/ring-lab/logo-cards-clean/logo-card-06.png' },
+      { title: 'Logo 07', src: '/assets/ring-lab/logo-cards-clean/logo-card-07.png' },
+      { title: 'Logo 08', src: '/assets/ring-lab/logo-cards-clean/logo-card-08.png' },
+      { title: 'Logo 09', src: '/assets/ring-lab/logo-cards-clean/logo-card-09.png' },
+      { title: 'Logo 10', src: '/assets/ring-lab/logo-cards-clean/logo-card-10.png' },
+      { title: 'Logo 11', src: '/assets/ring-lab/logo-cards-clean/logo-card-11.png' },
+      { title: 'Logo 12', src: '/assets/ring-lab/logo-cards-clean/logo-card-12.png' },
+      { title: 'Logo 13', src: '/assets/ring-lab/logo-cards-clean/logo-card-13.png' },
+      { title: 'Logo 14', src: '/assets/ring-lab/logo-cards-clean/logo-card-14.png' },
+      { title: 'Logo 15', src: '/assets/ring-lab/logo-cards-clean/logo-card-15.png' },
+      { title: 'Logo 16', src: '/assets/ring-lab/logo-cards-clean/logo-card-16.png' },
+      { title: 'Logo 17', src: '/assets/ring-lab/logo-cards-clean/logo-card-17.png' },
+      { title: 'Logo 18', src: '/assets/ring-lab/logo-cards-clean/logo-card-18.png' },
+      { title: 'Logo 19', src: '/assets/ring-lab/logo-cards-clean/logo-card-19.png' },
+      { title: 'Logo 20', src: '/assets/ring-lab/logo-cards-clean/logo-card-20.png' },
+      { title: 'Logo 21', src: '/assets/ring-lab/logo-cards-clean/logo-card-21.png' },
+      { title: 'Logo 22', src: '/assets/ring-lab/logo-cards-clean/logo-card-22.png' },
+      { title: 'Logo 23', src: '/assets/ring-lab/logo-cards-clean/logo-card-23.png' },
+      { title: 'Logo 24', src: '/assets/ring-lab/logo-cards-clean/logo-card-24.png' },
+      { title: 'Logo 25', src: '/assets/ring-lab/logo-cards-clean/logo-card-25.png' },
+      { title: 'Logo 26', src: '/assets/ring-lab/logo-cards-clean/logo-card-26.png' },
+      { title: 'Logo 27', src: '/assets/ring-lab/logo-cards-clean/logo-card-27.png' },
+      { title: 'Logo 28', src: '/assets/ring-lab/logo-cards-clean/logo-card-28.png' },
+      { title: 'Logo 29', src: '/assets/ring-lab/logo-cards-clean/logo-card-29.png' },
+      { title: 'Logo 30', src: '/assets/ring-lab/logo-cards-clean/logo-card-30.png' },
+      { title: 'Logo 31', src: '/assets/ring-lab/logo-cards-clean/logo-card-31.png' },
+      { title: 'Logo 32', src: '/assets/ring-lab/logo-cards-clean/logo-card-32.jpg' },
+      { title: 'Logo 33', src: '/assets/ring-lab/logo-cards-clean/logo-card-33.jpg' },
+    ]
+
+    const IPAD_SCREEN_SOURCE = {
+  title: 'John Wolf',
+  src: '/assets/ring-lab/john-wolf-ipad-screen.png',
+}
+
+    const TAU = Math.PI * 2
+    const ROW_COUNT = 5
+    const PANELS_PER_ROW = 12
+
+    const canvas = document.getElementById('ringsCanvas')
+    const loading = document.getElementById('loading')
+    const countLabel = document.getElementById('labCount')
+    const hoverLabel = document.getElementById('hoverLabel')
+    const ringsCursor = document.getElementById('ringsCursor')
+
+    const logoDetailBackdrop =
+      document.getElementById(
+        'logoDetailBackdrop',
+      )
+
+    const logoDetailCard =
+      document.getElementById(
+        'logoDetailCard',
+      )
+
+    const logoDetailCardInner =
+      document.getElementById(
+        'logoDetailCardInner',
+      )
+
+    const logoDetailCardFrontImage =
+      document.getElementById(
+        'logoDetailCardFrontImage',
+      )
+
+    const logoDetailCardBackImage =
+      document.getElementById(
+        'logoDetailCardBackImage',
+      )
+
+    const logoDetailNavigation =
+      document.getElementById(
+        'logoDetailNavigation',
+      )
+
+    const logoDetailPrevious =
+      document.getElementById(
+        'logoDetailPrevious',
+      )
+
+    const logoDetailNext =
+      document.getElementById(
+        'logoDetailNext',
+      )
+
+    const logoDetailClose =
+      document.getElementById(
+        'logoDetailClose',
+      )
+
+    const logoDetailInformation =
+      document.getElementById(
+        'logoDetailInformation',
+      )
+
+    const logoDetailProjectIndex =
+      document.getElementById(
+        'logoDetailProjectIndex',
+      )
+
+    const logoDetailProjectName =
+      document.getElementById(
+        'logoDetailProjectName',
+      )
+
+    const logoDetailProjectDuty =
+      document.getElementById(
+        'logoDetailProjectDuty',
+      )
+
+    const logoDetailProjectResult =
+      document.getElementById(
+        'logoDetailProjectResult',
+      )
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance',
+    })
+
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.toneMapping = THREE.NoToneMapping
+    renderer.setClearColor(0x000000, 0)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+
+    const scene = new THREE.Scene()
+    scene.background = null
+
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300)
+    scene.add(camera)
+
+    const ringRoot = new THREE.Group()
+    const gridRoot = new THREE.Group()
+    const modelRoot = new THREE.Group()
+    scene.add(ringRoot, modelRoot)
+
+    const raycaster = new THREE.Raycaster()
+    const pointer = new THREE.Vector2(9, 9)
+    const panelMeshes = []
+    const rowGroups = []
+    const textureCache = new Map()
+
+    let config = null
+    let gridLines = null
+    let backdrop = null
+    let modelPivot = null
+    let targetRotation = 0
+    let currentRotation = 0
+    let targetVertical = 0
+    let currentVertical = 0
+    let previousRotation = 0
+    let previousVertical = 0
+    let pointerX = 0
+    let pointerY = 0
+    let targetPointerX = 0
+    let targetPointerY = 0
+    let dragging = false
+    let dragStartX = 0
+    let dragStartRotation = 0
+    let touchStartY = null
+    let activeMesh = null
+
+    /*
+      Logo detail selection state.
+
+      Stage 1:
+      - detect a genuine card click
+      - align that exact card with the front of the gallery
+      - center its row vertically
+      - temporarily lock normal gallery movement
+    */
+    let selectedMesh = null
+    let interactionLocked = false
+    let pointerDownMesh = null
+    let pointerDownX = 0
+    let pointerDownY = 0
+    let pointerMoved = false
+
+    /*
+      Stage 2 detail entrance state.
+    */
+    let detailEntrancePending = false
+    let detailViewOpen = false
+    let detailViewAnimating = false
+    let detailMotion = null
+    let detailCardAnimation = null
+    let detailFlipAnimation = null
+    let detailInformationTimer = null
+
+    /*
+      Stage 4 navigation state.
+    */
+    let detailWheelAccumulator = 0
+    let detailWheelLastEvent = 0
+    let detailWheelCooldownUntil = 0
+
+    let cursorX = -100
+    let cursorY = -100
+    let cursorTargetX = -100
+    let cursorTargetY = -100
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max)
+    }
+
+    function wrap(value, min, max) {
+      const range = max - min
+      return ((value - min) % range + range) % range + min
+    }
+
+    function nearestEquivalentAngle(value, reference) {
+      const difference = value - reference
+
+      return (
+        reference +
+        Math.atan2(
+          Math.sin(difference),
+          Math.cos(difference),
+        )
+      )
+    }
+
+    function nearestPeriodicValue(
+      value,
+      reference,
+      period,
+    ) {
+      return (
+        reference +
+        wrap(
+          value - reference,
+          -period / 2,
+          period / 2,
+        )
+      )
+    }
+
+    function getPanelAtPointer() {
+      raycaster.setFromCamera(pointer, camera)
+
+      return (
+        raycaster.intersectObjects(
+          panelMeshes,
+          false,
+        )[0]?.object ||
+        null
+      )
+    }
+
+    function clearLogoHover() {
+      activeMesh = null
+
+      hoverLabel.classList.remove('is-visible')
+
+      ringsCursor.classList.remove(
+        'is-image-hover',
+      )
+    }
+
+    function getProjectedMeshRect(mesh) {
+      scene.updateMatrixWorld(true)
+
+      const corners = [
+        new THREE.Vector3(-0.5, -0.5, 0),
+        new THREE.Vector3(0.5, -0.5, 0),
+        new THREE.Vector3(0.5, 0.5, 0),
+        new THREE.Vector3(-0.5, 0.5, 0),
+      ]
+
+      const screenPoints =
+        corners.map((corner) => {
+          corner
+            .applyMatrix4(mesh.matrixWorld)
+            .project(camera)
+
+          return {
+            x:
+              (corner.x + 1) *
+              0.5 *
+              window.innerWidth,
+
+            y:
+              (1 - corner.y) *
+              0.5 *
+              window.innerHeight,
+          }
+        })
+
+      const xValues =
+        screenPoints.map(
+          (point) => point.x,
+        )
+
+      const yValues =
+        screenPoints.map(
+          (point) => point.y,
+        )
+
+      const left = Math.min(...xValues)
+      const right = Math.max(...xValues)
+      const top = Math.min(...yValues)
+      const bottom = Math.max(...yValues)
+
+      return {
+        left,
+        top,
+        width:
+          Math.max(
+            right - left,
+            1,
+          ),
+        height:
+          Math.max(
+            bottom - top,
+            1,
+          ),
+      }
+    }
+
+    function getDetailTargetRect(originRect) {
+      const viewportWidth =
+        window.innerWidth
+
+      const viewportHeight =
+        window.innerHeight
+
+      const desktop =
+        viewportWidth >= 900
+
+      const topClearance =
+        desktop
+          ? 118
+          : 94
+
+      const bottomClearance =
+        desktop
+          ? 86
+          : 72
+
+      const availableHeight =
+        Math.max(
+          viewportHeight -
+          topClearance -
+          bottomClearance,
+          220,
+        )
+
+      const aspect =
+        originRect.height /
+        originRect.width
+
+      const preferredWidth =
+        desktop
+          ? Math.min(
+              420,
+              viewportWidth * 0.3,
+            )
+          : Math.min(
+              310,
+              viewportWidth * 0.54,
+            )
+
+      const width =
+        Math.min(
+          preferredWidth,
+          availableHeight / aspect,
+        )
+
+      const height =
+        width *
+        aspect
+
+      /*
+        The selected logo finishes on the left.
+        The right side remains available for the
+        Name, Duty, and Result project information.
+      */
+      const leftGutter =
+        desktop
+          ? Math.max(
+              42,
+              viewportWidth * 0.065,
+            )
+          : 24
+
+      return {
+        left:
+          leftGutter,
+
+        top:
+          topClearance +
+          (
+            availableHeight -
+            height
+          ) /
+          2,
+
+        width,
+        height,
+      }
+    }
+
+    function getDetailTransform(
+      rect,
+      scale = 1,
+    ) {
+      return `
+        translate3d(
+          ${rect.left}px,
+          ${rect.top}px,
+          0
+        )
+        scale(${scale})
+      `
+    }
+
+    function cancelDetailAnimations() {
+      detailCardAnimation?.cancel()
+      detailFlipAnimation?.cancel()
+
+      if (detailInformationTimer) {
+        window.clearTimeout(
+          detailInformationTimer,
+        )
+
+        detailInformationTimer = null
+      }
+
+      detailCardAnimation = null
+      detailFlipAnimation = null
+    }
+
+    function wait(milliseconds) {
+      return new Promise((resolve) => {
+        window.setTimeout(
+          resolve,
+          milliseconds,
+        )
+      })
+    }
+
+    function getDetailInformationLayout(
+      target,
+    ) {
+      const viewportWidth =
+        window.innerWidth
+
+      const viewportHeight =
+        window.innerHeight
+
+      const desktop =
+        viewportWidth >= 900
+
+      if (!desktop) {
+        return {
+          left: 20,
+          top:
+            Math.min(
+              target.top +
+              target.height +
+              24,
+              viewportHeight * 0.53,
+            ),
+          width:
+            viewportWidth -
+            40,
+          startX: -48,
+          yShift: '0',
+        }
+      }
+
+      const gap =
+        Math.max(
+          54,
+          viewportWidth * 0.045,
+        )
+
+      const left =
+        target.left +
+        target.width +
+        gap
+
+      const rightGutter =
+        Math.max(
+          38,
+          viewportWidth * 0.05,
+        )
+
+      const width =
+        Math.max(
+          300,
+          Math.min(
+            680,
+            viewportWidth -
+            left -
+            rightGutter,
+          ),
+        )
+
+      return {
+        left,
+        top:
+          viewportHeight / 2,
+        width,
+        startX:
+          -Math.min(
+            165,
+            gap + 92,
+          ),
+        yShift: '-50%',
+      }
+    }
+
+    function getOverlayCardImageSource(
+      source,
+    ) {
+      const texture =
+        textureCache.get(
+          source.src,
+        )
+
+      const image =
+        texture?.image
+
+      if (!image) {
+        return source.src
+      }
+
+      /*
+        The Three.js gallery has already loaded and
+        processed this exact card image. Convert that
+        existing texture to an internal data URL so the
+        cinematic overlay does not perform a second
+        network request.
+      */
+      if (
+        typeof image.toDataURL ===
+        'function'
+      ) {
+        try {
+          return image.toDataURL(
+            'image/png',
+          )
+        } catch {
+          return source.src
+        }
+      }
+
+      const width =
+        image.naturalWidth ||
+        image.videoWidth ||
+        image.width
+
+      const height =
+        image.naturalHeight ||
+        image.videoHeight ||
+        image.height
+
+      if (
+        !width ||
+        !height
+      ) {
+        return source.src
+      }
+
+      try {
+        const output =
+          document.createElement(
+            'canvas',
+          )
+
+        output.width = width
+        output.height = height
+
+        const context =
+          output.getContext(
+            '2d',
+          )
+
+        context.drawImage(
+          image,
+          0,
+          0,
+          width,
+          height,
+        )
+
+        return output.toDataURL(
+          'image/png',
+        )
+      } catch {
+        return source.src
+      }
+    }
+
+    function prepareLogoProjectInformation(
+      sourceIndex,
+      target,
+    ) {
+      const project =
+        projectDetails[sourceIndex]
+
+      if (!project) {
+        throw new Error(
+          `No project information exists for source index ${sourceIndex}.`,
+        )
+      }
+
+      const layout =
+        getDetailInformationLayout(
+          target,
+        )
+
+      logoDetailProjectIndex.textContent =
+        `Project ${String(
+          sourceIndex + 1,
+        ).padStart(
+          2,
+          '0',
+        )} / ${projectDetails.length}`
+
+      logoDetailProjectName.textContent =
+        project.name
+
+      logoDetailProjectDuty.textContent =
+        project.duty
+
+      logoDetailProjectResult.textContent =
+        project.result
+
+      logoDetailInformation.style.left =
+        `${layout.left}px`
+
+      logoDetailInformation.style.top =
+        `${layout.top}px`
+
+      logoDetailInformation.style.width =
+        `${layout.width}px`
+
+      logoDetailInformation.style.setProperty(
+        '--information-start-x',
+        `${layout.startX}px`,
+      )
+
+      logoDetailInformation.style.setProperty(
+        '--information-y',
+        layout.yShift,
+      )
+
+      /*
+        Set a real visible starting state rather than
+        relying only on class-based custom properties.
+      */
+      logoDetailInformation.style.visibility =
+        'visible'
+
+      logoDetailInformation.style.opacity =
+        '0'
+
+      logoDetailInformation.style.transform =
+        `translate3d(
+          ${layout.startX}px,
+          ${layout.yShift},
+          0
+        )`
+
+      logoDetailInformation.style.clipPath =
+        'inset(0 100% 0 0)'
+
+      logoDetailInformation.style.filter =
+        'blur(8px)'
+
+      logoDetailInformation.classList.remove(
+        'is-revealed',
+      )
+
+      logoDetailInformation.classList.add(
+        'is-prepared',
+      )
+
+      logoDetailInformation.setAttribute(
+        'aria-hidden',
+        'false',
+      )
+
+      /*
+        Force the browser to register the concealed
+        starting position before transitioning outward.
+      */
+      void logoDetailInformation.offsetWidth
+
+      if (detailInformationTimer) {
+        window.clearTimeout(
+          detailInformationTimer,
+        )
+      }
+
+      detailInformationTimer =
+        window.setTimeout(
+          () => {
+            logoDetailInformation.classList.add(
+              'is-revealed',
+            )
+
+            logoDetailInformation.style.visibility =
+              'visible'
+
+            logoDetailInformation.style.opacity =
+              '1'
+
+            logoDetailInformation.style.transform =
+              `translate3d(
+                0,
+                ${layout.yShift},
+                0
+              )`
+
+            logoDetailInformation.style.clipPath =
+              'inset(0 0 0 0)'
+
+            logoDetailInformation.style.filter =
+              'blur(0)'
+
+            detailInformationTimer = null
+          },
+          330,
+        )
+
+      return layout
+    }
+
+    function hideLogoProjectInformation() {
+      if (detailInformationTimer) {
+        window.clearTimeout(
+          detailInformationTimer,
+        )
+
+        detailInformationTimer = null
+      }
+
+      const layout =
+        detailMotion?.informationLayout
+
+      logoDetailInformation.classList.remove(
+        'is-revealed',
+      )
+
+      logoDetailInformation.style.opacity =
+        '0'
+
+      logoDetailInformation.style.transform =
+        `translate3d(
+          ${layout?.startX ?? -120}px,
+          ${layout?.yShift ?? '-50%'},
+          0
+        )`
+
+      logoDetailInformation.style.clipPath =
+        'inset(0 100% 0 0)'
+
+      logoDetailInformation.style.filter =
+        'blur(8px)'
+    }
+
+    function resetLogoProjectInformation() {
+      hideLogoProjectInformation()
+
+      logoDetailInformation.classList.remove(
+        'is-prepared',
+      )
+
+      logoDetailInformation.setAttribute(
+        'aria-hidden',
+        'true',
+      )
+
+      logoDetailInformation.removeAttribute(
+        'style',
+      )
+
+      logoDetailProjectIndex.textContent = ''
+      logoDetailProjectName.textContent = ''
+      logoDetailProjectDuty.textContent = ''
+      logoDetailProjectResult.textContent = ''
+    }
+
+    function resetDetailVisuals() {
+      cancelDetailAnimations()
+      hideDetailControls()
+
+      logoDetailBackdrop.classList.remove(
+        'is-active',
+      )
+
+      logoDetailCard.classList.remove(
+        'is-active',
+      )
+
+      logoDetailCard.style.removeProperty(
+        'width',
+      )
+
+      logoDetailCard.style.removeProperty(
+        'height',
+      )
+
+      logoDetailCard.style.removeProperty(
+        'transform',
+      )
+
+      logoDetailCardInner.style.removeProperty(
+        'transform',
+      )
+
+      logoDetailCardFrontImage.removeAttribute(
+        'src',
+      )
+
+      logoDetailCardBackImage.removeAttribute(
+        'src',
+      )
+
+      logoDetailCardFrontImage.alt = ''
+      logoDetailCardBackImage.alt = ''
+
+      resetLogoProjectInformation()
+
+      detailMotion = null
+      detailViewOpen = false
+      detailViewAnimating = false
+      detailEntrancePending = false
+
+      document.body.classList.remove(
+        'is-logo-detail-open',
+      )
+    }
+
+    function setDetailControlsEnabled(
+      enabled,
+    ) {
+      logoDetailPrevious.disabled =
+        !enabled
+
+      logoDetailNext.disabled =
+        !enabled
+
+      logoDetailClose.disabled =
+        !enabled
+
+      logoDetailNavigation.classList.toggle(
+        'is-busy',
+        !enabled,
+      )
+    }
+
+    function showDetailControls(
+      target,
+    ) {
+      const navigationTop =
+        Math.min(
+          target.top +
+          target.height +
+          26,
+          window.innerHeight -
+          38,
+        )
+
+      logoDetailNavigation.style.left =
+        `${
+          target.left +
+          target.width / 2
+        }px`
+
+      logoDetailNavigation.style.top =
+        `${navigationTop}px`
+
+      logoDetailNavigation.classList.add(
+        'is-visible',
+      )
+
+      logoDetailNavigation.setAttribute(
+        'aria-hidden',
+        'false',
+      )
+
+      logoDetailClose.classList.add(
+        'is-visible',
+      )
+
+      setDetailControlsEnabled(true)
+    }
+
+    function hideDetailControls() {
+      logoDetailNavigation.classList.remove(
+        'is-visible',
+        'is-busy',
+      )
+
+      logoDetailNavigation.setAttribute(
+        'aria-hidden',
+        'true',
+      )
+
+      logoDetailNavigation.style.removeProperty(
+        'left',
+      )
+
+      logoDetailNavigation.style.removeProperty(
+        'top',
+      )
+
+      logoDetailClose.classList.remove(
+        'is-visible',
+      )
+
+      logoDetailPrevious.disabled = true
+      logoDetailNext.disabled = true
+      logoDetailClose.disabled = true
+
+      detailWheelAccumulator = 0
+      detailWheelLastEvent = 0
+      detailWheelCooldownUntil = 0
+    }
+
+    async function setDetailOverlayProject(
+      sourceIndex,
+    ) {
+      const source =
+        sources[sourceIndex]
+
+      if (!source) {
+        throw new Error(
+          `No logo source exists for index ${sourceIndex}.`,
+        )
+      }
+
+      const overlayCardImage =
+        getOverlayCardImageSource(
+          source,
+        )
+
+      logoDetailCardFrontImage.src =
+        overlayCardImage
+
+      logoDetailCardBackImage.src =
+        overlayCardImage
+
+      const projectName =
+        projectDetails[sourceIndex]?.name ||
+        source.title
+
+      logoDetailCardFrontImage.alt =
+        projectName
+
+      logoDetailCardBackImage.alt =
+        projectName
+
+      await Promise.all([
+        logoDetailCardFrontImage
+          .decode()
+          .catch(() => {}),
+        logoDetailCardBackImage
+          .decode()
+          .catch(() => {}),
+      ])
+    }
+
+    function getDetailMeshPlacement(
+      sourceIndex,
+    ) {
+      const totalRowHeight =
+        config.rowSpacing *
+        ROW_COUNT
+
+      let bestPlacement = null
+      let bestScore = Infinity
+
+      panelMeshes.forEach((mesh) => {
+        if (
+          mesh.userData.sourceIndex !==
+          sourceIndex
+        ) {
+          return
+        }
+
+        const desiredRotation =
+          nearestEquivalentAngle(
+            mesh.userData.angle -
+            Math.PI / 2,
+            currentRotation,
+          )
+
+        const row =
+          rowGroups[
+            mesh.userData.rowIndex
+          ]
+
+        const baseY =
+          row?.userData.baseY ??
+          0
+
+        const desiredVertical =
+          nearestPeriodicValue(
+            -baseY,
+            currentVertical,
+            totalRowHeight,
+          )
+
+        const horizontalDistance =
+          Math.abs(
+            desiredRotation -
+            currentRotation,
+          )
+
+        const verticalDistance =
+          Math.abs(
+            desiredVertical -
+            currentVertical,
+          ) /
+          Math.max(
+            config.rowSpacing,
+            1,
+          )
+
+        const score =
+          horizontalDistance * 4 +
+          verticalDistance
+
+        if (score < bestScore) {
+          bestScore = score
+
+          bestPlacement = {
+            mesh,
+            rotation:
+              desiredRotation,
+            vertical:
+              desiredVertical,
+          }
+        }
+      })
+
+      return bestPlacement
+    }
+
+    async function navigateLogoDetail(
+      direction,
+    ) {
+      if (
+        !detailViewOpen ||
+        detailViewAnimating ||
+        !selectedMesh ||
+        !detailMotion
+      ) {
+        return
+      }
+
+      const step =
+        direction < 0
+          ? -1
+          : 1
+
+      const currentIndex =
+        selectedMesh.userData.sourceIndex
+
+      const nextIndex =
+        (
+          currentIndex +
+          step +
+          sources.length
+        ) %
+        sources.length
+
+      const placement =
+        getDetailMeshPlacement(
+          nextIndex,
+        )
+
+      if (!placement) {
+        return
+      }
+
+      detailViewAnimating = true
+      detailWheelAccumulator = 0
+
+      setDetailControlsEnabled(false)
+      hideLogoProjectInformation()
+
+      const previousMesh =
+        selectedMesh
+
+      const nextMesh =
+        placement.mesh
+
+      /*
+        Move the blurred Three.js gallery toward the
+        incoming card while the foreground card flips.
+      */
+      nextMesh.visible = false
+      previousMesh.visible = true
+
+      targetRotation =
+        placement.rotation
+
+      targetVertical =
+        placement.vertical
+
+      await wait(230)
+
+      /*
+        First half of the flip:
+        the outgoing project turns edge-on.
+      */
+      logoDetailCardInner.style.transform =
+        'rotateY(180deg)'
+
+      detailFlipAnimation =
+        logoDetailCardInner.animate(
+          [
+            {
+              transform:
+                'rotateY(180deg)',
+            },
+            {
+              transform:
+                'rotateY(270deg)',
+            },
+          ],
+          {
+            duration: 340,
+            easing:
+              'cubic-bezier(0.65, 0, 0.35, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      try {
+        await detailFlipAnimation.finished
+      } catch {
+        return
+      }
+
+      logoDetailCardInner.style.transform =
+        'rotateY(270deg)'
+
+      detailFlipAnimation.cancel()
+      detailFlipAnimation = null
+
+      /*
+        Swap projects only while the card is edge-on.
+      */
+      await setDetailOverlayProject(
+        nextIndex,
+      )
+
+      selectedMesh =
+        nextMesh
+
+      countLabel.textContent =
+        `${String(
+          nextIndex + 1,
+        ).padStart(
+          2,
+          '0',
+        )} / ${sources.length} selected work`
+
+      const informationLayout =
+        prepareLogoProjectInformation(
+          nextIndex,
+          detailMotion.target,
+        )
+
+      detailMotion.informationLayout =
+        informationLayout
+
+      /*
+        Second half of the same flip:
+        the incoming project turns toward the viewer.
+      */
+      detailFlipAnimation =
+        logoDetailCardInner.animate(
+          [
+            {
+              transform:
+                'rotateY(270deg)',
+            },
+            {
+              transform:
+                'rotateY(360deg)',
+            },
+          ],
+          {
+            duration: 440,
+            easing:
+              'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      try {
+        await detailFlipAnimation.finished
+      } catch {
+        return
+      }
+
+      /*
+        Both faces carry the same logo, so returning the
+        resting value to 180 degrees is visually seamless
+        and preserves the approved close choreography.
+      */
+      logoDetailCardInner.style.transform =
+        'rotateY(180deg)'
+
+      detailFlipAnimation.cancel()
+      detailFlipAnimation = null
+
+      detailViewAnimating = false
+
+      detailWheelCooldownUntil =
+        performance.now() +
+        680
+
+      setDetailControlsEnabled(true)
+    }
+
+    function onDetailWheel(event) {
+      if (!detailViewOpen) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      const now =
+        performance.now()
+
+      if (
+        detailViewAnimating ||
+        now <
+          detailWheelCooldownUntil
+      ) {
+        return
+      }
+
+      if (
+        now -
+        detailWheelLastEvent >
+        190
+      ) {
+        detailWheelAccumulator = 0
+      }
+
+      detailWheelLastEvent = now
+
+      const dominantDelta =
+        Math.abs(event.deltaY) >=
+        Math.abs(event.deltaX)
+          ? event.deltaY
+          : event.deltaX
+
+      detailWheelAccumulator +=
+        dominantDelta
+
+      if (
+        Math.abs(
+          detailWheelAccumulator,
+        ) < 52
+      ) {
+        return
+      }
+
+      const direction =
+        detailWheelAccumulator > 0
+          ? 1
+          : -1
+
+      detailWheelAccumulator = 0
+
+      navigateLogoDetail(
+        direction,
+      )
+    }
+
+    async function beginLogoDetailEntrance() {
+      if (
+        !selectedMesh ||
+        detailViewAnimating ||
+        detailViewOpen
+      ) {
+        return
+      }
+
+      detailEntrancePending = false
+      detailViewAnimating = true
+
+      const origin =
+        getProjectedMeshRect(
+          selectedMesh,
+        )
+
+      const target =
+        getDetailTargetRect(
+          origin,
+        )
+
+      const finalScale =
+        target.width /
+        origin.width
+
+      const originTransform =
+        getDetailTransform(
+          origin,
+          1,
+        )
+
+      const finalTransform =
+        getDetailTransform(
+          target,
+          finalScale,
+        )
+
+      const informationLayout =
+        getDetailInformationLayout(
+          target,
+        )
+
+      detailMotion = {
+        origin,
+        target,
+        finalScale,
+        originTransform,
+        finalTransform,
+        informationLayout,
+      }
+
+      await setDetailOverlayProject(
+        selectedMesh.userData.sourceIndex,
+      )
+
+      logoDetailCard.style.width =
+        `${origin.width}px`
+
+      logoDetailCard.style.height =
+        `${origin.height}px`
+
+      logoDetailCard.style.transform =
+        originTransform
+
+      logoDetailCardInner.style.transform =
+        'rotateY(0deg)'
+
+      logoDetailCard.classList.add(
+        'is-active',
+      )
+
+      /*
+        The DOM card now perfectly covers the Three.js
+        card, so the original can disappear without a
+        visible jump.
+      */
+      selectedMesh.visible = false
+
+      document.body.classList.add(
+        'is-logo-detail-open',
+      )
+
+      logoDetailBackdrop.classList.add(
+        'is-active',
+      )
+
+      prepareLogoProjectInformation(
+        selectedMesh.userData.sourceIndex,
+        target,
+      )
+
+      const duration = 1380
+
+      const intermediateLeft =
+        origin.left +
+        (
+          target.left -
+          origin.left
+        ) *
+        0.46
+
+      const intermediateTop =
+        origin.top +
+        (
+          target.top -
+          origin.top
+        ) *
+        0.4
+
+      const intermediateScale =
+        1 +
+        (
+          finalScale -
+          1
+        ) *
+        0.54 +
+        0.08
+
+      detailCardAnimation =
+        logoDetailCard.animate(
+          [
+            {
+              offset: 0,
+              transform:
+                originTransform,
+            },
+            {
+              offset: 0.46,
+              transform:
+                getDetailTransform(
+                  {
+                    left:
+                      intermediateLeft,
+                    top:
+                      intermediateTop,
+                  },
+                  intermediateScale,
+                ),
+            },
+            {
+              offset: 1,
+              transform:
+                finalTransform,
+            },
+          ],
+          {
+            duration,
+            easing:
+              'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      detailFlipAnimation =
+        logoDetailCardInner.animate(
+          [
+            {
+              offset: 0,
+              transform:
+                'rotateY(0deg)',
+            },
+            {
+              offset: 0.16,
+              transform:
+                'rotateY(-7deg)',
+            },
+            {
+              offset: 0.5,
+              transform:
+                'rotateY(82deg)',
+            },
+            {
+              offset: 1,
+              transform:
+                'rotateY(180deg)',
+            },
+          ],
+          {
+            duration,
+            easing:
+              'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      try {
+        await Promise.all([
+          detailCardAnimation.finished,
+          detailFlipAnimation.finished,
+        ])
+      } catch {
+        return
+      }
+
+      logoDetailCard.style.transform =
+        finalTransform
+
+      logoDetailCardInner.style.transform =
+        'rotateY(180deg)'
+
+      cancelDetailAnimations()
+
+      detailViewAnimating = false
+      detailViewOpen = true
+
+      showDetailControls(
+        target,
+      )
+
+      detailWheelCooldownUntil =
+        performance.now() +
+        480
+    }
+
+    function finalizeSelectedLogoRelease() {
+      interactionLocked = false
+      selectedMesh = null
+      pointerDownMesh = null
+      pointerMoved = false
+      dragging = false
+
+      canvas.classList.remove(
+        'is-dragging',
+      )
+
+      document.body.classList.remove(
+        'is-logo-focus-locked',
+      )
+
+      pointer.set(9, 9)
+      clearLogoHover()
+    }
+
+    async function closeLogoDetail() {
+      if (
+        !selectedMesh ||
+        !detailViewOpen ||
+        detailViewAnimating ||
+        !detailMotion
+      ) {
+        return
+      }
+
+      detailViewAnimating = true
+      detailViewOpen = false
+
+      hideDetailControls()
+      hideLogoProjectInformation()
+
+      /*
+        Allow the information to retract toward the card
+        before the return travel and flip fully begin.
+      */
+      await wait(220)
+
+      cancelDetailAnimations()
+
+      logoDetailCard.style.transform =
+        detailMotion.finalTransform
+
+      logoDetailCardInner.style.transform =
+        'rotateY(180deg)'
+
+      logoDetailBackdrop.classList.remove(
+        'is-active',
+      )
+
+      const duration = 1040
+
+      detailCardAnimation =
+        logoDetailCard.animate(
+          [
+            {
+              transform:
+                detailMotion.finalTransform,
+            },
+            {
+              transform:
+                detailMotion.originTransform,
+            },
+          ],
+          {
+            duration,
+            easing:
+              'cubic-bezier(0.7, 0, 0.2, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      detailFlipAnimation =
+        logoDetailCardInner.animate(
+          [
+            {
+              transform:
+                'rotateY(180deg)',
+            },
+            {
+              offset: 0.54,
+              transform:
+                'rotateY(92deg)',
+            },
+            {
+              transform:
+                'rotateY(0deg)',
+            },
+          ],
+          {
+            duration,
+            easing:
+              'cubic-bezier(0.7, 0, 0.2, 1)',
+            fill: 'forwards',
+          },
+        )
+
+      try {
+        await Promise.all([
+          detailCardAnimation.finished,
+          detailFlipAnimation.finished,
+        ])
+      } catch {
+        return
+      }
+
+      if (selectedMesh) {
+        selectedMesh.visible = true
+      }
+
+      resetDetailVisuals()
+      finalizeSelectedLogoRelease()
+    }
+
+    function forceCloseLogoDetail() {
+      if (selectedMesh) {
+        selectedMesh.visible = true
+      }
+
+      resetDetailVisuals()
+    }
+
+    function focusSelectedLogo(mesh) {
+      if (
+        !mesh ||
+        interactionLocked
+      ) {
+        return
+      }
+
+      selectedMesh = mesh
+      interactionLocked = true
+      detailEntrancePending = true
+      detailViewOpen = false
+      detailViewAnimating = false
+      dragging = false
+      pointerDownMesh = null
+      pointerMoved = false
+
+      canvas.classList.remove('is-dragging')
+      document.body.classList.add(
+        'is-logo-focus-locked',
+      )
+
+      /*
+        Remove mouse-driven camera offset so the selected
+        card arrives at the true visual center.
+      */
+      targetPointerX = 0
+      targetPointerY = 0
+
+      clearLogoHover()
+
+      /*
+        A panel is nearest the camera when its transformed
+        angle reaches positive Z. The nearest equivalent
+        angle prevents unnecessary full-circle rotation.
+      */
+      const desiredRotation =
+        mesh.userData.angle -
+        Math.PI / 2
+
+      targetRotation =
+        nearestEquivalentAngle(
+          desiredRotation,
+          currentRotation,
+        )
+
+      /*
+        Bring the selected card's row to vertical center
+        using the shortest movement through the repeating
+        five-row cylinder.
+      */
+      const totalRowHeight =
+        config.rowSpacing *
+        ROW_COUNT
+
+      const selectedRow =
+        rowGroups[
+          mesh.userData.rowIndex
+        ]
+
+      const selectedBaseY =
+        selectedRow?.userData.baseY ??
+        0
+
+      targetVertical =
+        nearestPeriodicValue(
+          -selectedBaseY,
+          currentVertical,
+          totalRowHeight,
+        )
+
+      countLabel.textContent =
+        `${String(
+          mesh.userData.sourceIndex + 1,
+        ).padStart(
+          2,
+          '0',
+        )} / ${sources.length} selected work`
+    }
+
+    function releaseSelectedLogo(
+      options = {},
+    ) {
+      const immediate =
+        Boolean(
+          options.immediate,
+        )
+
+      if (immediate) {
+        forceCloseLogoDetail()
+        finalizeSelectedLogoRelease()
+        return
+      }
+
+      if (detailViewAnimating) {
+        return
+      }
+
+      if (detailViewOpen) {
+        closeLogoDetail()
+        return
+      }
+
+      detailEntrancePending = false
+
+      if (selectedMesh) {
+        selectedMesh.visible = true
+      }
+
+      resetDetailVisuals()
+      finalizeSelectedLogoRelease()
+    }
+
+    function getConfig() {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      const portrait = height > width
+      const mobileLandscape = width < 768 && !portrait
+
+      if (mobileLandscape) {
+        return {
+          fov: 50,
+          cameraZ: 13,
+          radius: 7.8,
+          panelW: 1.54,
+          panelH: 2.09,
+          rowSpacing: 7,
+          gridRadius: 34,
+          gridHalfHeight: 22,
+          modelSize: 4.1,
+        }
+      }
+
+      if (width < 450) {
+        return {
+          fov: 70,
+          cameraZ: 7.5,
+          radius: 4.5,
+          panelW: 1.1,
+          panelH: 1.54,
+          rowSpacing: 5.5,
+          gridRadius: 30,
+          gridHalfHeight: 30,
+          modelSize: 2.7,
+        }
+      }
+
+      if (width < 600) {
+        return {
+          fov: 70,
+          cameraZ: 9.5,
+          radius: 4.6,
+          panelW: 1.1,
+          panelH: 1.54,
+          rowSpacing: 3.8,
+          gridRadius: 30,
+          gridHalfHeight: 30,
+          modelSize: 3.0,
+        }
+      }
+
+      if (width < 1024 && portrait) {
+        return {
+          fov: 65,
+          cameraZ: 9,
+          radius: 5.5,
+          panelW: 1.1,
+          panelH: 1.54,
+          rowSpacing: 6.5,
+          gridRadius: 30,
+          gridHalfHeight: 30,
+          modelSize: 3.2,
+        }
+      }
+
+      if (width < 1024) {
+        return {
+          fov: 60,
+          cameraZ: 11,
+          radius: 6.5,
+          panelW: 1.32,
+          panelH: 1.76,
+          rowSpacing: 4,
+          gridRadius: 34,
+          gridHalfHeight: 22,
+          modelSize: 3.7,
+        }
+      }
+
+      return {
+        fov: 50,
+        cameraZ: 13,
+        radius: 7.8,
+        panelW: 1.54,
+        panelH: 2.09,
+        rowSpacing: 7,
+        gridRadius: 34,
+        gridHalfHeight: 22,
+        modelSize: 4.1,
+      }
+    }
+
+    function drawContainTexture(image, title) {
+      const width = 768
+      const height = 1024
+      const output = document.createElement('canvas')
+      output.width = width
+      output.height = height
+      const context = output.getContext('2d')
+
+      context.fillStyle = '#0b0b18'
+      context.fillRect(0, 0, width, height)
+
+      if (image?.naturalWidth && image?.naturalHeight) {
+        const coverScale = Math.max(width / image.naturalWidth, height / image.naturalHeight)
+        const coverW = image.naturalWidth * coverScale
+        const coverH = image.naturalHeight * coverScale
+
+        context.save()
+        context.globalAlpha = 0.42
+        context.filter = 'blur(34px) saturate(1.18)'
+        context.drawImage(image, (width - coverW) / 2, (height - coverH) / 2, coverW, coverH)
+        context.restore()
+
+        context.fillStyle = 'rgba(5, 5, 14, 0.46)'
+        context.fillRect(0, 0, width, height)
+
+        const inset = 44
+        const containScale = Math.min((width - inset * 2) / image.naturalWidth, (height - inset * 2) / image.naturalHeight)
+        const drawW = image.naturalWidth * containScale
+        const drawH = image.naturalHeight * containScale
+
+        context.fillStyle = 'rgba(0, 0, 0, 0.18)'
+        context.fillRect((width - drawW) / 2 - 8, (height - drawH) / 2 - 8, drawW + 16, drawH + 16)
+        context.drawImage(image, (width - drawW) / 2, (height - drawH) / 2, drawW, drawH)
+      } else {
+        context.fillStyle = '#1500e1'
+        context.fillRect(0, 0, width, height)
+        context.fillStyle = '#fff'
+        context.textAlign = 'center'
+        context.textBaseline = 'middle'
+        context.font = '700 48px Arial'
+        context.fillText(title, width / 2, height / 2)
+      }
+
+      const texture = new THREE.CanvasTexture(output)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.needsUpdate = true
+      return texture
+    }
+
+
+    function drawIpadTexture(image) {
+      const width = 1000
+      const height = 1600
+      const inset = 44
+
+      const output = document.createElement('canvas')
+      output.width = width
+      output.height = height
+
+      const context = output.getContext('2d')
+      context.fillStyle = '#ffffff'
+      context.fillRect(0, 0, width, height)
+
+      if (image?.naturalWidth && image?.naturalHeight) {
+        const availableWidth = height - inset * 2
+        const availableHeight = width - inset * 2
+        const containScale = Math.min(
+          availableWidth / image.naturalWidth,
+          availableHeight / image.naturalHeight,
+        )
+        const drawWidth = image.naturalWidth * containScale
+        const drawHeight = image.naturalHeight * containScale
+
+        context.save()
+        context.translate(width / 2, height / 2)
+        context.rotate(-Math.PI / 2)
+        context.scale(-1, 1)
+        context.drawImage(
+          image,
+          -drawWidth / 2,
+          -drawHeight / 2,
+          drawWidth,
+          drawHeight,
+        )
+        context.restore()
+      }
+
+      const texture = new THREE.CanvasTexture(output)
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+      texture.minFilter = THREE.LinearMipmapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.wrapS = THREE.ClampToEdgeWrapping
+      texture.wrapT = THREE.ClampToEdgeWrapping
+      texture.needsUpdate = true
+      return texture
+    }
+
+    function loadImage(source) {
+      return new Promise((resolve) => {
+        const image = new Image()
+        image.crossOrigin = 'anonymous'
+        image.onload = () => resolve(image)
+        image.onerror = () => resolve(null)
+        image.src = source
+      })
+    }
+
+    async function loadPanelTextures() {
+      await Promise.all(
+        sources.map(async (source) => {
+          const image = await loadImage(source.src)
+          textureCache.set(
+            source.src,
+            drawContainTexture(image, source.title),
+          )
+        }),
+      )
+
+      const ipadImage = await loadImage(IPAD_SCREEN_SOURCE.src)
+      textureCache.set(
+        IPAD_SCREEN_SOURCE.src,
+        drawIpadTexture(ipadImage),
+      )
+    }
+
+    const panelVertexShader = `
+      uniform float uBendH;
+      uniform float uBendV;
+      uniform float uTime;
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+        vec3 transformed = position;
+        float xn = (uv.x - 0.5) * 2.0;
+        float yn = (uv.y - 0.5) * 2.0;
+        float horizontalShape = mix(0.58, 1.0, 1.0 - xn * xn);
+        float verticalShape = mix(0.58, 1.0, 1.0 - yn * yn);
+        float wave = sin((uv.x * 5.0 + uv.y * 3.0) + uTime * 0.65) * 0.012;
+        transformed.z += horizontalShape * uBendH;
+        transformed.z += verticalShape * uBendV;
+        transformed.z += wave;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+      }
+    `
+
+    const panelFragmentShader = `
+      uniform sampler2D uMap;
+      uniform float uOpacity;
+      varying vec2 vUv;
+
+      void main() {
+        vec4 color = texture2D(uMap, vUv);
+        gl_FragColor = vec4(color.rgb, color.a * uOpacity);
+      }
+    `
+
+    function createPanelMaterial(texture) {
+      return new THREE.ShaderMaterial({
+        uniforms: {
+          uMap: { value: texture },
+          uOpacity: { value: 1 },
+          uBendH: { value: 0 },
+          uBendV: { value: 0 },
+          uTime: { value: 0 },
+        },
+        vertexShader: panelVertexShader,
+        fragmentShader: panelFragmentShader,
+        side: THREE.DoubleSide,
+        transparent: false,
+        depthTest: true,
+        depthWrite: true,
+        toneMapped: false,
+      })
+    }
+
+    function buildBackdrop() {
+      if (backdrop) {
+        scene.remove(backdrop)
+        backdrop.geometry.dispose()
+        backdrop.material.dispose()
+      }
+
+      backdrop = new THREE.Mesh(
+        new THREE.SphereGeometry(140, 28, 20),
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          side: THREE.BackSide,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      )
+
+      backdrop.renderOrder = -100
+      scene.add(backdrop)
+    }
+
+    function buildGrid() {
+      if (gridLines) {
+        gridRoot.remove(gridLines)
+        gridLines.geometry.dispose()
+        gridLines.material.dispose()
+      }
+
+      const radius = config.gridRadius
+      const halfHeight = config.gridHalfHeight
+      const radialDivisions = 80
+      const horizontalDivisions = window.innerHeight > window.innerWidth ? 22 : 16
+      const points = []
+
+      for (let index = 0; index < radialDivisions; index += 1) {
+        const angle = (index / radialDivisions) * TAU
+        const x = Math.cos(angle) * radius
+        const z = Math.sin(angle) * radius
+        points.push(x, -halfHeight, z, x, halfHeight, z)
+      }
+
+      for (let row = 0; row <= horizontalDivisions; row += 1) {
+        const y = -halfHeight + (row / horizontalDivisions) * halfHeight * 2
+        for (let index = 0; index < 200; index += 1) {
+          const a = (index / 200) * TAU
+          const b = ((index + 1) / 200) * TAU
+          points.push(
+            Math.cos(a) * radius, y, Math.sin(a) * radius,
+            Math.cos(b) * radius, y, Math.sin(b) * radius,
+          )
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry()
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3))
+      const material = new THREE.LineBasicMaterial({
+        color: 0x040404,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false,
+      })
+
+      gridLines = new THREE.LineSegments(geometry, material)
+      gridLines.renderOrder = -10
+      gridRoot.add(gridLines)
+    }
+
+    function clearPanels() {
+      panelMeshes.splice(0).forEach((mesh) => {
+        mesh.geometry.dispose()
+        mesh.material.dispose()
+      })
+      rowGroups.splice(0).forEach((group) => ringRoot.remove(group))
+    }
+
+    function buildPanels() {
+      clearPanels()
+
+      for (let rowIndex = 0; rowIndex < ROW_COUNT; rowIndex += 1) {
+        const rowGroup = new THREE.Group()
+        rowGroup.userData.baseY = (rowIndex - (ROW_COUNT - 1) / 2) * config.rowSpacing
+        ringRoot.add(rowGroup)
+        rowGroups.push(rowGroup)
+
+        for (let panelIndex = 0; panelIndex < PANELS_PER_ROW; panelIndex += 1) {
+          const flatPanelIndex =
+            rowIndex * PANELS_PER_ROW +
+            panelIndex
+
+          let sourceIndex =
+            flatPanelIndex %
+            sources.length
+
+          /*
+            There are 60 cylinder positions, so the logo
+            source list repeats during the second cycle.
+            Keep Big Dawg card 04 only in its first position.
+          */
+          const isRepeatedBigDawg =
+            flatPanelIndex >= sources.length &&
+            /\/logo-card-04\.(?:png|jpg|jpeg)$/i.test(
+              sources[sourceIndex].src,
+            )
+
+          if (isRepeatedBigDawg) {
+            sourceIndex =
+              (sourceIndex + 1) %
+              sources.length
+          }
+
+          const source =
+            sources[sourceIndex]
+          const angle = ((panelIndex + rowIndex * 0.5) / PANELS_PER_ROW) * TAU
+          const geometry = new THREE.PlaneGeometry(1, 1, 12, 8)
+          const material = createPanelMaterial(textureCache.get(source.src))
+          const mesh = new THREE.Mesh(geometry, material)
+
+          /*
+            Keep every cylinder position available to the renderer.
+            Rear panels remain visible through the DoubleSide material.
+          */
+          mesh.frustumCulled = false
+
+          mesh.scale.set(config.panelW, config.panelH, 1)
+          mesh.position.set(
+            Math.cos(angle) * config.radius,
+            0,
+            Math.sin(angle) * config.radius,
+          )
+          mesh.rotation.y = -(angle - Math.PI / 2)
+          mesh.userData = {
+            source,
+            sourceIndex,
+            angle,
+            rowIndex,
+            panelIndex,
+          }
+
+          rowGroup.add(mesh)
+          panelMeshes.push(mesh)
+        }
+      }
+    }
+
+    function createFallbackTablet() {
+      const group = new THREE.Group()
+      const frame = new THREE.Mesh(
+        new THREE.BoxGeometry(4.2, 2.9, 0.18),
+        new THREE.MeshStandardMaterial({ color: 0xd8d8df, metalness: 0.82, roughness: 0.22 }),
+      )
+      const screen = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.95, 2.65),
+        new THREE.MeshBasicMaterial({ map: textureCache.get(IPAD_SCREEN_SOURCE.src), toneMapped: false }),
+      )
+      screen.position.z = 0.101
+      group.add(frame, screen)
+      return group
+    }
+
+    async function loadIpad() {
+      try {
+        const loader = new GLTFLoader()
+        const gltf = await loader.loadAsync('/assets/logos/ipad/scene.gltf')
+        const model = gltf.scene
+        const remove = []
+
+        model.traverse((child) => {
+          if (/Apple Pencil|Text|Line/i.test(child.name)) {
+            remove.push(child)
+            return
+          }
+
+          if (!child.isMesh) return
+
+          const isScreen = /screen/i.test(child.name) || /screen/i.test(child.material?.name || '')
+          if (isScreen) {
+            const screenTexture = textureCache.get(IPAD_SCREEN_SOURCE.src).clone()
+            screenTexture.flipY = false
+            screenTexture.colorSpace = THREE.SRGBColorSpace
+            screenTexture.needsUpdate = true
+            child.material = new THREE.MeshBasicMaterial({
+              map: screenTexture,
+              toneMapped: false,
+              side: THREE.DoubleSide,
+            })
+          } else if (child.material) {
+            child.material = child.material.clone()
+            child.material.metalness = Math.max(child.material.metalness || 0, 0.35)
+            child.material.roughness = Math.min(child.material.roughness ?? 0.55, 0.42)
+          }
+        })
+
+        remove.forEach((child) => child.parent?.remove(child))
+
+        const initialBox = new THREE.Box3().setFromObject(model)
+        const initialCenter = initialBox.getCenter(new THREE.Vector3())
+        model.position.sub(initialCenter)
+
+        const upright = new THREE.Group()
+        upright.rotation.x = -Math.PI / 2
+        upright.add(model)
+
+        const landscape = new THREE.Group()
+        landscape.rotation.z = Math.PI / 2
+        landscape.add(upright)
+        landscape.updateMatrixWorld(true)
+
+        const orientedBox = new THREE.Box3().setFromObject(landscape)
+        const orientedCenter = orientedBox.getCenter(new THREE.Vector3())
+        landscape.position.sub(orientedCenter)
+        landscape.updateMatrixWorld(true)
+
+        const orientedSize = new THREE.Box3().setFromObject(landscape).getSize(new THREE.Vector3())
+        const scale = config.modelSize / Math.max(orientedSize.x, orientedSize.y, orientedSize.z)
+        landscape.scale.setScalar(scale)
+
+        return landscape
+      } catch (error) {
+        console.warn('iPad model could not load; using procedural fallback.', error)
+        return createFallbackTablet()
+      }
+    }
+
+    function addLights() {
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x06031a, 2.25))
+
+      const key = new THREE.DirectionalLight(0xffffff, 3.5)
+      key.position.set(5, 6, 9)
+      scene.add(key)
+
+      const violet = new THREE.PointLight(0xa081ff, 16, 20, 2)
+      violet.position.set(-4, 2, 5)
+      scene.add(violet)
+
+      const pink = new THREE.PointLight(0xff77bb, 12, 16, 2)
+      pink.position.set(4, -2, 4)
+      scene.add(pink)
+    }
+
+    function applyConfig() {
+      config = getConfig()
+      camera.fov = config.fov
+      camera.position.set(0, 0, config.cameraZ)
+      camera.lookAt(0, 0, 0)
+      camera.updateProjectionMatrix()
+      buildGrid()
+      buildPanels()
+
+      if (modelPivot?.children[0]) {
+        const object = modelPivot.children[0]
+        const box = new THREE.Box3().setFromObject(object)
+        const size = box.getSize(new THREE.Vector3())
+        const largest = Math.max(size.x, size.y, size.z)
+        if (largest > 0) object.scale.multiplyScalar(config.modelSize / largest)
+      }
+    }
+
+    function resize() {
+      /*
+        Resizing rebuilds every Three.js card. Release the
+        temporary focus first so no stale mesh reference
+        survives the rebuild.
+      */
+      if (interactionLocked) {
+        releaseSelectedLogo({
+          immediate: true,
+        })
+      }
+
+      const width = Math.max(window.innerWidth, 1)
+      const height = Math.max(window.innerHeight, 1)
+      renderer.setSize(width, height, false)
+      camera.aspect = width / height
+      applyConfig()
+    }
+
+    function updatePointer(event) {
+      pointer.x =
+        (event.clientX / window.innerWidth) *
+        2 -
+        1
+
+      pointer.y =
+        -(event.clientY / window.innerHeight) *
+        2 +
+        1
+
+      if (!interactionLocked) {
+        targetPointerX = pointer.x
+        targetPointerY = pointer.y
+      }
+
+      hoverLabel.style.left =
+        `${event.clientX}px`
+
+      hoverLabel.style.top =
+        `${event.clientY}px`
+
+      cursorTargetX = event.clientX
+      cursorTargetY = event.clientY
+
+      ringsCursor.classList.add('is-visible')
+    }
+
+    function onWheel(event) {
+      event.preventDefault()
+
+      if (interactionLocked) {
+        return
+      }
+
+      targetRotation +=
+        event.deltaY *
+        0.00108
+
+      targetVertical -=
+        event.deltaY *
+        0.0034
+    }
+
+    function onPointerDown(event) {
+      if (interactionLocked) {
+        return
+      }
+
+      updatePointer(event)
+
+      pointerDownMesh =
+        getPanelAtPointer()
+
+      pointerDownX = event.clientX
+      pointerDownY = event.clientY
+      pointerMoved = false
+
+      dragging = true
+      dragStartX = event.clientX
+      dragStartRotation = targetRotation
+
+      canvas.classList.add('is-dragging')
+      canvas.setPointerCapture(event.pointerId)
+    }
+
+    function onPointerMove(event) {
+      updatePointer(event)
+
+      if (
+        interactionLocked ||
+        !dragging
+      ) {
+        return
+      }
+
+      const distance = Math.hypot(
+        event.clientX - pointerDownX,
+        event.clientY - pointerDownY,
+      )
+
+      if (distance > 7) {
+        pointerMoved = true
+      }
+
+      targetRotation =
+        dragStartRotation -
+        (
+          event.clientX -
+          dragStartX
+        ) *
+        0.006
+    }
+
+    function onPointerUp(event) {
+      if (!interactionLocked) {
+        updatePointer(event)
+      }
+
+      const releasedMesh =
+        interactionLocked
+          ? null
+          : getPanelAtPointer()
+
+      const shouldFocus =
+        !interactionLocked &&
+        dragging &&
+        !pointerMoved &&
+        Boolean(pointerDownMesh) &&
+        releasedMesh ===
+          pointerDownMesh
+
+      dragging = false
+      canvas.classList.remove('is-dragging')
+
+      if (
+        canvas.hasPointerCapture(
+          event.pointerId,
+        )
+      ) {
+        canvas.releasePointerCapture(
+          event.pointerId,
+        )
+      }
+
+      const clickedMesh =
+        shouldFocus
+          ? releasedMesh
+          : null
+
+      pointerDownMesh = null
+      pointerMoved = false
+
+      if (clickedMesh) {
+        focusSelectedLogo(
+          clickedMesh,
+        )
+      }
+    }
+
+    function onTouchStart(event) {
+      if (interactionLocked) {
+        return
+      }
+
+      touchStartY =
+        event.touches[0]?.clientY ??
+        null
+    }
+
+    function onTouchMove(event) {
+      if (
+        interactionLocked ||
+        touchStartY === null
+      ) {
+        return
+      }
+
+      const nextY =
+        event.touches[0]?.clientY
+
+      if (nextY === undefined) {
+        return
+      }
+
+      event.preventDefault()
+
+      const delta =
+        touchStartY -
+        nextY
+
+      touchStartY = nextY
+
+      targetRotation +=
+        delta *
+        0.006
+
+      targetVertical -=
+        delta *
+        0.018
+    }
+
+    function onKeyDown(event) {
+      if (
+        interactionLocked &&
+        event.key === 'Escape'
+      ) {
+        event.preventDefault()
+        releaseSelectedLogo()
+        return
+      }
+
+      if (
+        detailViewOpen &&
+        !detailViewAnimating
+      ) {
+        if (
+          event.key === 'ArrowRight' ||
+          event.key === 'ArrowDown' ||
+          event.key === 'PageDown'
+        ) {
+          event.preventDefault()
+
+          navigateLogoDetail(1)
+          return
+        }
+
+        if (
+          event.key === 'ArrowLeft' ||
+          event.key === 'ArrowUp' ||
+          event.key === 'PageUp'
+        ) {
+          event.preventDefault()
+
+          navigateLogoDetail(-1)
+          return
+        }
+      }
+
+      if (interactionLocked) {
+        return
+      }
+
+      if (
+        event.key === 'ArrowRight' ||
+        event.key === 'ArrowDown' ||
+        event.key === 'PageDown'
+      ) {
+        targetRotation += 0.24
+        targetVertical -= 0.7
+      }
+
+      if (
+        event.key === 'ArrowLeft' ||
+        event.key === 'ArrowUp' ||
+        event.key === 'PageUp'
+      ) {
+        targetRotation -= 0.24
+        targetVertical += 0.7
+      }
+    }
+
+    function updateHover() {
+      if (interactionLocked) {
+        return
+      }
+
+      const hit =
+        getPanelAtPointer()
+
+      if (hit !== activeMesh) {
+        activeMesh = hit
+
+        ringsCursor.classList.toggle(
+          'is-image-hover',
+          Boolean(activeMesh),
+        )
+
+        if (activeMesh) {
+          hoverLabel.textContent = activeMesh.userData.source.title
+          hoverLabel.classList.add('is-visible')
+          countLabel.textContent = `${String(activeMesh.userData.sourceIndex + 1).padStart(2, '0')} / ${sources.length} selected works`
+        } else {
+          hoverLabel.classList.remove('is-visible')
+        }
+      }
+    }
+
+    function animate(timeMs) {
+      const time = timeMs * 0.001
+
+      cursorX += (cursorTargetX - cursorX) * 0.34
+      cursorY += (cursorTargetY - cursorY) * 0.34
+
+      ringsCursor.style.transform = `
+        translate3d(
+          ${cursorX}px,
+          ${cursorY}px,
+          0
+        )
+        translate(-50%, -50%)
+      `
+      currentRotation += (targetRotation - currentRotation) * 0.075
+      currentVertical += (targetVertical - currentVertical) * 0.075
+      pointerX += (targetPointerX - pointerX) * 0.055
+      pointerY += (targetPointerY - pointerY) * 0.055
+
+      const rotationVelocity = currentRotation - previousRotation
+      const verticalVelocity = currentVertical - previousVertical
+      previousRotation = currentRotation
+      previousVertical = currentVertical
+
+      ringRoot.rotation.y = currentRotation
+      gridRoot.rotation.y = currentRotation * 0.09
+
+      const totalRowHeight = config.rowSpacing * ROW_COUNT
+      const half = totalRowHeight / 2
+      rowGroups.forEach((row) => {
+        row.position.y = wrap(row.userData.baseY + currentVertical, -half, half)
+      })
+
+      const bendH = clamp(rotationVelocity * 12.5, -0.34, 0.34)
+      const bendV = clamp(verticalVelocity * 0.16, -0.22, 0.22)
+      panelMeshes.forEach((mesh) => {
+        mesh.material.uniforms.uBendH.value += (bendH - mesh.material.uniforms.uBendH.value) * 0.12
+        mesh.material.uniforms.uBendV.value += (bendV - mesh.material.uniforms.uBendV.value) * 0.12
+        mesh.material.uniforms.uTime.value = time
+      })
+
+      if (modelPivot) {
+        modelPivot.rotation.y = -currentRotation * 2
+        modelPivot.rotation.x = 0.08 - pointerY * 0.035
+        modelPivot.rotation.z = -0.18 + Math.sin(time * 0.75) * 0.035
+        modelPivot.position.y = Math.sin(time * 0.82) * 0.12
+        modelPivot.position.x = pointerX * 0.12
+      }
+
+      camera.position.x = pointerX * 0.18
+      camera.position.y = -pointerY * 0.12
+      camera.lookAt(0, 0, 0)
+
+      /*
+        Wait until the selected Three.js card has fully
+        reached the front and center before replacing it
+        with the synchronized cinematic detail card.
+      */
+      if (
+        interactionLocked &&
+        detailEntrancePending &&
+        selectedMesh &&
+        !detailViewAnimating
+      ) {
+        const horizontalReady =
+          Math.abs(
+            targetRotation -
+            currentRotation,
+          ) < 0.0016
+
+        const verticalReady =
+          Math.abs(
+            targetVertical -
+            currentVertical,
+          ) < 0.012
+
+        const cameraReady =
+          Math.abs(pointerX) < 0.008 &&
+          Math.abs(pointerY) < 0.008
+
+        if (
+          horizontalReady &&
+          verticalReady &&
+          cameraReady
+        ) {
+          beginLogoDetailEntrance()
+        }
+      }
+
+      updateHover()
+      renderer.render(scene, camera)
+      requestAnimationFrame(animate)
+    }
+
+    async function init() {
+      addLights()
+      buildBackdrop()
+      config = getConfig()
+      await loadPanelTextures()
+      buildGrid()
+      buildPanels()
+
+      modelPivot = new THREE.Group()
+      modelRoot.add(modelPivot)
+      modelPivot.add(await loadIpad())
+
+      resize()
+      loading.classList.add('is-hidden')
+      requestAnimationFrame(animate)
+    }
+
+    logoDetailPrevious.addEventListener(
+      'click',
+      () => {
+        navigateLogoDetail(-1)
+      },
+    )
+
+    logoDetailNext.addEventListener(
+      'click',
+      () => {
+        navigateLogoDetail(1)
+      },
+    )
+
+    logoDetailClose.addEventListener(
+      'click',
+      () => {
+        releaseSelectedLogo()
+      },
+    )
+
+    /*
+      Capture detail-mode scrolling before it reaches the
+      normal Three.js gallery wheel handler.
+    */
+    window.addEventListener(
+      'wheel',
+      onDetailWheel,
+      {
+        passive: false,
+        capture: true,
+      },
+    )
+
+    canvas.addEventListener('wheel', onWheel, { passive: false })
+    canvas.addEventListener('pointerdown', onPointerDown)
+    canvas.addEventListener('pointermove', onPointerMove)
+
+    window.addEventListener('pointermove', (event) => {
+      cursorTargetX = event.clientX
+      cursorTargetY = event.clientY
+      ringsCursor.classList.add('is-visible')
+    })
+
+    document.documentElement.addEventListener('mouseleave', () => {
+      ringsCursor.classList.remove('is-visible')
+      ringsCursor.classList.remove('is-image-hover')
+    })
+
+    window.addEventListener('blur', () => {
+      ringsCursor.classList.remove('is-visible')
+      ringsCursor.classList.remove('is-image-hover')
+    })
+    canvas.addEventListener('pointerup', onPointerUp)
+    canvas.addEventListener('pointercancel', onPointerUp)
+    canvas.addEventListener('pointerleave', () => {
+      targetPointerX = 0
+      targetPointerY = 0
+      hoverLabel.classList.remove('is-visible')
+    })
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    canvas.addEventListener('touchend', () => { touchStartY = null })
+    window.addEventListener('resize', resize)
+    window.addEventListener('keydown', onKeyDown)
+
+    init().catch((error) => {
+      console.error(error)
+      loading.querySelector('span').textContent = 'The Rings laboratory could not load'
+    })
+  </script>
+  <!-- START PROJECT TRANSITION ENTRY -->
+  <script type="module">
+    import * as THREE from 'three'
+    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js'
+    import { initStartProjectTransition } from '/assets/start-project/start-project-transition-core.js'
+
+    initStartProjectTransition({ THREE, OBJLoader })
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1477 @@
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
+import ExpertiseIcon from './components/ExpertiseIcon.jsx'
+
+gsap.registerPlugin(ScrollTrigger)
+
+const navigation = ['Home', 'About', 'Services', 'Portfolio', 'Testimonials', 'Contact']
+
+const expertise = [
+  {
+    icon: 'identity',
+    title: 'Brand Identity',
+    body: 'Distinctive logos, typography, color systems, and visual standards built for recognition.',
+  },
+  {
+    icon: 'digital',
+    title: 'Digital Experiences',
+    body: 'Purposeful websites and interactive visuals shaped through design, motion, and usability.',
+  },
+  {
+    icon: 'campaign',
+    title: 'Campaign Creative',
+    body: 'Launch graphics, advertisements, and social content designed to command attention.',
+  },
+  {
+    icon: 'partnership',
+    title: 'Creative Partnership',
+    body: 'Thoughtful design support from the first strategic idea through polished final delivery.',
+  },
+]
+
+const carouselCards = [
+  {
+    title: 'Home',
+    eyebrow: 'Opening scene',
+    description: 'Return to the beginning of the experience.',
+    video: '/assets/hero-neon.mp4',
+    poster: '/assets/hero-neon-poster.png',
+  },
+  {
+    title: 'Logos',
+    eyebrow: 'Identity marks',
+    description: 'Distinctive symbols and signature systems made to be remembered.',
+    video: '/assets/carousel/logos.mp4',
+    poster: '/assets/carousel/logos.jpg',
+  },
+  {
+    title: 'Brand Guidelines',
+    eyebrow: 'Visual systems',
+    description: 'Rules that keep every brand expression clear, consistent, and recognizable.',
+    video: '/assets/carousel/brand-guidelines.mp4',
+    poster: '/assets/carousel/brand-guidelines.jpg',
+  },
+  {
+    title: 'Websites',
+    eyebrow: 'Digital experiences',
+    description: 'Immersive interfaces that turn strong ideas into intuitive experiences.',
+    video: '/assets/carousel/websites.mp4',
+    poster: '/assets/carousel/websites.jpg',
+  },
+  {
+    title: 'Illustrations',
+    eyebrow: 'Custom artwork',
+    description: 'Original visuals built to give campaigns and stories their own character.',
+    video: '/assets/carousel/illustrations.mp4',
+    poster: '/assets/carousel/illustrations.jpg',
+  },
+  {
+    title: 'Packaging',
+    eyebrow: 'Product presence',
+    description: 'Shelf-ready design that makes the product feel considered before it is opened.',
+    video: '/assets/carousel/packaging.mp4',
+    poster: '/assets/carousel/packaging.jpg',
+  },
+  {
+    title: 'Social Campaigns',
+    eyebrow: 'Attention systems',
+    description: 'Connected campaign visuals designed to stop the scroll and strengthen recall.',
+    video: '/assets/carousel/social-campaigns.mp4',
+    poster: '/assets/carousel/social-campaigns.jpg',
+  },
+  {
+    title: 'Print Design',
+    eyebrow: 'Physical media',
+    description: 'Editorial, promotional, and event materials shaped with tactile precision.',
+    video: '/assets/carousel/print-design.mp4',
+    poster: '/assets/carousel/print-design.jpg',
+  },
+  {
+    title: 'Typography',
+    eyebrow: 'Voice in form',
+    description: 'Type-led compositions that make language feel as intentional as the message.',
+    video: '/assets/carousel/typography.mp4',
+    poster: '/assets/carousel/typography.jpg',
+  },
+  {
+    title: 'Motion Design',
+    eyebrow: 'Design in time',
+    description: 'Movement, rhythm, and transformation used to make visual stories feel alive.',
+    video: '/assets/carousel/motion-design.mp4',
+    poster: '/assets/carousel/motion-design.jpg',
+  },
+  {
+    title: 'Creative Direction',
+    eyebrow: 'Unified vision',
+    description: 'A clear visual point of view carried from the first concept through delivery.',
+    video: '/assets/carousel/creative-direction.mp4',
+    poster: '/assets/carousel/creative-direction.jpg',
+  },
+  {
+    title: 'Photo Composites',
+    eyebrow: 'Constructed worlds',
+    description: 'Layered image-making that bends reality without losing believability.',
+    video: '/assets/carousel/photo-composites.mp4',
+    poster: '/assets/carousel/photo-composites.jpg',
+  },
+  {
+    title: 'Case Studies',
+    eyebrow: 'Process revealed',
+    description: 'A closer look at the decisions, systems, and craft behind selected projects.',
+    video: '/assets/carousel/case-studies.mp4',
+    poster: '/assets/carousel/case-studies.jpg',
+  },
+  {
+    title: 'About',
+    eyebrow: 'The designer',
+    description: 'The thinking, standards, and experience behind the work.',
+    video: '/assets/carousel/about.mp4',
+    poster: '/assets/carousel/about.jpg',
+  },
+  {
+    title: 'Contact',
+    eyebrow: 'Start something',
+    description: 'Bring the idea. We will shape the visual experience around it.',
+    video: '/assets/carousel/contact.mp4',
+    poster: '/assets/carousel/contact.jpg',
+  },
+]
+
+const brandGuidelineProjects = [
+  {
+    title: 'Northmark',
+    image: '/assets/carousel/logos.jpg',
+  },
+  {
+    title: 'Crowned Beauty',
+    image: '/assets/carousel/brand-guidelines.jpg',
+  },
+  {
+    title: 'Auralis',
+    image: '/assets/carousel/websites.jpg',
+  },
+  {
+    title: 'Maison Vela',
+    image: '/assets/carousel/illustrations.jpg',
+  },
+  {
+    title: 'Ember House',
+    image: '/assets/carousel/packaging.jpg',
+  },
+  {
+    title: 'Social Orbit',
+    image: '/assets/carousel/social-campaigns.jpg',
+  },
+  {
+    title: 'Field Notes',
+    image: '/assets/carousel/print-design.jpg',
+  },
+  {
+    title: 'Neue Rhythm',
+    image: '/assets/carousel/typography.jpg',
+  },
+  {
+    title: 'Kinetic Form',
+    image: '/assets/carousel/motion-design.jpg',
+  },
+  {
+    title: 'Solara Studio',
+    image: '/assets/carousel/creative-direction.jpg',
+  },
+  {
+    title: 'Parallel Worlds',
+    image: '/assets/carousel/photo-composites.jpg',
+  },
+  {
+    title: 'Meridian System',
+    image: '/assets/carousel/case-studies.jpg',
+  },
+  {
+    title: 'Atelier Wolf',
+    image: '/assets/carousel/about.jpg',
+  },
+  {
+    title: 'Open Canvas',
+    image: '/assets/carousel/contact.jpg',
+  },
+]
+
+
+function scrollToSection(id) {
+  document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export default function App() {
+  const root = useRef(null)
+  const experience = useRef(null)
+  const stickyStage = useRef(null)
+  const heroVideo = useRef(null)
+  const homeCardVideo = useRef(null)
+  const carouselRing = useRef(null)
+  const collectionOverlay = useRef(null)
+  const collectionStory = useRef(null)
+  const collectionStage = useRef(null)
+  const collectionBackdropVideo = useRef(null)
+  const brandGuidelinesCard = useRef(null)
+  const brandGuidelinesVideo = useRef(null)
+  const collectionOrigin = useRef(null)
+  const collectionClosing = useRef(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const [activeCard, setActiveCard] = useState(0)
+  const [collectionOpen, setCollectionOpen] = useState(false)
+  const [collectionReady, setCollectionReady] = useState(false)
+  const [collectionProjectsActive, setCollectionProjectsActive] = useState(false)
+
+  const angleStep = useMemo(() => 360 / carouselCards.length, [])
+
+  /* ===== BRAND GUIDELINES FULL MORPH V2 ===== */
+
+  const openBrandGuidelines = (event) => {
+    const card = event.currentTarget
+    const rect = card.getBoundingClientRect()
+
+    collectionOrigin.current = {
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    }
+
+    collectionClosing.current = false
+    setCollectionReady(false)
+    setCollectionOpen(true)
+  }
+
+  const returnToCollectionOverview = () => {
+    const overlay = collectionOverlay.current
+
+    if (!overlay) return
+
+    overlay.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+
+  /*
+    Physically contract the full Brand Guidelines page into the exact
+    carousel-card rectangle captured when the collection was opened.
+  */
+  const closeBrandGuidelinesToCard = () => {
+    if (collectionClosing.current) return
+
+    const overlay = collectionOverlay.current
+    const stage = collectionStage.current
+    const origin = collectionOrigin.current
+
+    if (!overlay || !stage || !origin) {
+      setCollectionProjectsActive(false)
+      setCollectionReady(false)
+      setCollectionOpen(false)
+      return
+    }
+
+    collectionClosing.current = true
+    setCollectionProjectsActive(false)
+
+    const archiveChrome = overlay.querySelectorAll(
+      [
+        '.collection-topbar',
+        '.collection-title',
+        '.collection-project-wall',
+        '.collection-scroll-guide',
+        '.collection-history',
+        '.collection-feature-layer',
+        '.collection-close',
+      ].join(', '),
+    )
+
+    gsap.killTweensOf(stage)
+    gsap.killTweensOf(archiveChrome)
+
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        setCollectionReady(false)
+        setCollectionOpen(false)
+        collectionClosing.current = false
+      },
+    })
+
+    timeline
+      .to(
+        archiveChrome,
+        {
+          opacity: 0,
+          y: -12,
+          duration: 0.3,
+          ease: 'power2.in',
+          pointerEvents: 'none',
+        },
+        0,
+      )
+      .to(
+        stage,
+        {
+          top: origin.top,
+          left: origin.left,
+          width: origin.width,
+          height: origin.height,
+          borderRadius: '1.45rem',
+          boxShadow:
+            '0 38px 110px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.22)',
+          duration: 1.08,
+          ease: 'power4.inOut',
+        },
+        0.08,
+      )
+  }
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) return undefined
+
+    const lenis = new Lenis({
+      duration: 1.08,
+      smoothWheel: true,
+      syncTouch: false,
+    })
+
+    lenis.on('scroll', ScrollTrigger.update)
+    const update = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(update)
+    gsap.ticker.lagSmoothing(0)
+
+    return () => {
+      gsap.ticker.remove(update)
+      lenis.destroy()
+    }
+  }, [])
+
+  useEffect(() => {
+    const source = heroVideo.current
+    const destination = homeCardVideo.current
+    if (!source || !destination) return undefined
+
+    const alignVideos = () => {
+      if (Number.isFinite(source.currentTime) && Math.abs(destination.currentTime - source.currentTime) > 0.35) {
+        destination.currentTime = source.currentTime
+      }
+      destination.play().catch(() => {})
+    }
+
+    source.addEventListener('playing', alignVideos)
+    destination.addEventListener('canplay', alignVideos)
+    alignVideos()
+
+    return () => {
+      source.removeEventListener('playing', alignVideos)
+      destination.removeEventListener('canplay', alignVideos)
+    }
+  }, [videoReady])
+
+  /* Active carousel video playback */
+  useEffect(() => {
+    const cardVideos = Array.from(
+      root.current?.querySelectorAll('.carousel-card-video video') ?? [],
+    )
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    cardVideos.forEach((video, index) => {
+      if (!collectionOpen && !reduceMotion && index === activeCard) {
+        video.play().catch(() => {})
+      } else {
+        video.pause()
+      }
+    })
+
+    return () => {
+      cardVideos.forEach((video) => video.pause())
+    }
+  }, [activeCard, collectionOpen])
+
+  /*
+    Lock the main document without changing its scroll position.
+    The archive scrolls inside its own full-screen container.
+  */
+  useEffect(() => {
+    if (!collectionOpen) return undefined
+
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyPadding = document.body.style.paddingRight
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth
+
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`
+    }
+
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return
+
+      const overlay = collectionOverlay.current
+
+      if (overlay && overlay.scrollTop > 12) {
+        returnToCollectionOverview()
+        return
+      }
+
+      setCollectionOpen(false)
+    }
+
+    const reverseExit = (event) => {
+      const overlay = collectionOverlay.current
+
+      if (
+        overlay &&
+        overlay.scrollTop <= 2 &&
+        event.deltaY < -8 &&
+        !collectionClosing.current
+      ) {
+        event.preventDefault()
+        closeBrandGuidelinesToCard()
+      }
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    collectionOverlay.current?.addEventListener(
+      'wheel',
+      reverseExit,
+      { passive: false },
+    )
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      if (collectionOverlay.current) {
+        collectionOverlay.current.scrollTop = 0
+        collectionOverlay.current.focus({ preventScroll: true })
+      }
+
+      ScrollTrigger.refresh()
+    })
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      window.removeEventListener('keydown', closeOnEscape)
+      collectionOverlay.current?.removeEventListener(
+        'wheel',
+        reverseExit,
+      )
+
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.paddingRight = previousBodyPadding
+
+      window.requestAnimationFrame(() => {
+        ScrollTrigger.refresh()
+      })
+    }
+  }, [collectionOpen])
+
+  /* ===== ARCHIVE PHYSICAL MORPH REPAIR V3 ===== */
+
+  /*
+    The archive stage begins at the selected carousel card's actual
+    dimensions. Width, height and position expand—not a full-screen
+    layer hidden behind a clip path.
+  */
+  useLayoutEffect(() => {
+    if (
+      !collectionOpen ||
+      !collectionOverlay.current ||
+      !collectionStage.current
+    ) {
+      return undefined
+    }
+
+    const overlay = collectionOverlay.current
+    const stage = collectionStage.current
+    const origin = collectionOrigin.current
+
+    if (!origin) {
+      setCollectionReady(true)
+      return undefined
+    }
+
+    collectionClosing.current = false
+    setCollectionProjectsActive(false)
+
+    const sourceVideo = brandGuidelinesVideo.current
+    const destinationVideo = collectionBackdropVideo.current
+
+    if (
+      sourceVideo &&
+      destinationVideo &&
+      Number.isFinite(sourceVideo.currentTime)
+    ) {
+      try {
+        destinationVideo.currentTime = sourceVideo.currentTime
+      } catch {
+        // Poster remains visible until video metadata is ready.
+      }
+
+      destinationVideo.play().catch(() => {})
+    }
+
+    const context = gsap.context(() => {
+      const revealTargets = overlay.querySelectorAll(
+        [
+          '.collection-topbar',
+          '.collection-title',
+          '.collection-project-wall',
+          '.collection-scroll-guide',
+        ].join(', '),
+      )
+
+      gsap.set(stage, {
+        position: 'fixed',
+        top: origin.top,
+        left: origin.left,
+        width: origin.width,
+        height: origin.height,
+        borderRadius: '1.45rem',
+        boxShadow:
+          '0 38px 110px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.22)',
+        overflow: 'hidden',
+      })
+
+      gsap.set(revealTargets, {
+        opacity: 0,
+        y: 18,
+      })
+
+      const opening = gsap.timeline({
+        onComplete: () => {
+          setCollectionReady(true)
+
+          window.requestAnimationFrame(() => {
+            ScrollTrigger.refresh()
+          })
+        },
+      })
+
+      opening
+        .to(stage, {
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100svh',
+          borderRadius: '0rem',
+          boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+          duration: 1.12,
+          ease: 'power4.inOut',
+        })
+        .to(
+          revealTargets,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.58,
+            stagger: 0.055,
+            ease: 'power3.out',
+          },
+          0.66,
+        )
+    }, overlay)
+
+    return () => {
+      context.revert()
+    }
+  }, [collectionOpen])
+
+  /*
+    Project-by-project scroll sequence inside the Brand Guidelines archive.
+  */
+  useLayoutEffect(() => {
+    if (
+      !collectionOpen ||
+      !collectionReady ||
+      !collectionOverlay.current ||
+      !collectionStory.current ||
+      !collectionStage.current
+    ) {
+      return undefined
+    }
+
+    const reduceMotion =
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (reduceMotion) return undefined
+
+    const overlay = collectionOverlay.current
+    const story = collectionStory.current
+    const stage = collectionStage.current
+
+    const context = gsap.context(() => {
+      const featureCards = Array.from(
+        overlay.querySelectorAll('.collection-feature-card'),
+      )
+
+      const historyItems = Array.from(
+        overlay.querySelectorAll('.collection-history-item'),
+      )
+
+      const backdrop = overlay.querySelector('.collection-backdrop')
+      const scrollGuide = overlay.querySelector('.collection-scroll-guide')
+
+      const closingUi = overlay.querySelectorAll(
+        [
+          '.collection-topbar',
+          '.collection-title',
+          '.collection-project-wall',
+          '.collection-scroll-guide',
+          '.collection-history',
+        ].join(', '),
+      )
+
+      const mobile = window.innerWidth <= 760
+      const activeShift = mobile
+        ? 0
+        : Math.min(window.innerWidth * 0.105, 185)
+
+      const dockX = () => {
+        if (window.innerWidth <= 760) {
+          return -window.innerWidth * 0.12
+        }
+
+        return -window.innerWidth * 0.36
+      }
+
+      const dockY = (index) => {
+        const availableHeight = Math.min(window.innerHeight * 0.66, 590)
+        const rowStep =
+          availableHeight /
+          Math.max(brandGuidelineProjects.length - 1, 1)
+
+        return -availableHeight / 2 + index * rowStep
+      }
+
+      gsap.set(featureCards, {
+        x: activeShift,
+        yPercent: 128,
+        scale: 0.8,
+        opacity: 0,
+        rotateX: -8,
+        transformOrigin: '50% 50%',
+      })
+
+      gsap.set(historyItems, {
+        opacity: 0,
+        x: -18,
+      })
+
+      const timeline = gsap.timeline({
+        defaults: {
+          ease: 'none',
+        },
+        scrollTrigger: {
+          trigger: story,
+          scroller: overlay,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.72,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            const projectsAreActive =
+              self.progress > 0.018 &&
+              self.progress < 0.985
+
+            setCollectionProjectsActive((current) =>
+              current === projectsAreActive
+                ? current
+                : projectsAreActive
+            )
+
+            if (
+              self.progress >= 0.998 &&
+              self.direction > 0 &&
+              !collectionClosing.current
+            ) {
+              closeBrandGuidelinesToCard()
+            }
+          },
+        },
+      })
+
+      timeline
+        .to(
+          backdrop,
+          {
+            opacity: 0.4,
+            filter: 'brightness(0.5) saturate(0.72)',
+            duration: 0.7,
+          },
+          0.08,
+        )
+        .to(
+          scrollGuide,
+          {
+            opacity: 0,
+            y: 12,
+            duration: 0.4,
+          },
+          0.08,
+        )
+        .to(
+          featureCards[0],
+          {
+            x: activeShift,
+            yPercent: 0,
+            scale: 1,
+            opacity: 1,
+            rotateX: 0,
+            duration: 0.9,
+            ease: 'power3.out',
+          },
+          0.22,
+        )
+
+      let cursor = 1.25
+
+      featureCards.slice(1).forEach((card, index) => {
+        const previousCard = featureCards[index]
+        const historyItem = historyItems[index]
+
+        timeline
+          .to(
+            previousCard,
+            {
+              x: dockX,
+              y: () => dockY(index),
+              yPercent: 0,
+              scale: mobile ? 0.22 : 0.17,
+              opacity: 0,
+              rotateX: 0,
+              duration: 0.82,
+              ease: 'power3.inOut',
+            },
+            cursor,
+          )
+          .to(
+            historyItem,
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.38,
+              ease: 'power2.out',
+            },
+            cursor + 0.44,
+          )
+          .fromTo(
+            card,
+            {
+              x: activeShift,
+              yPercent: 128,
+              scale: 0.82,
+              opacity: 0,
+              rotateX: -8,
+            },
+            {
+              x: activeShift,
+              yPercent: 0,
+              scale: 1,
+              opacity: 1,
+              rotateX: 0,
+              duration: 0.9,
+              ease: 'power3.inOut',
+            },
+            cursor + 0.08,
+          )
+
+        cursor += 1
+      })
+
+      const lastIndex = featureCards.length - 1
+      const lastCard = featureCards[lastIndex]
+      const lastHistoryItem = historyItems[lastIndex]
+
+      timeline
+        .to(
+          lastCard,
+          {
+            x: dockX,
+            y: () => dockY(lastIndex),
+            yPercent: 0,
+            scale: mobile ? 0.22 : 0.17,
+            opacity: 0,
+            rotateX: 0,
+            duration: 0.82,
+            ease: 'power3.inOut',
+          },
+          cursor,
+        )
+        .to(
+          lastHistoryItem,
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.38,
+            ease: 'power2.out',
+          },
+          cursor + 0.44,
+        )
+        .to(
+          historyItems,
+          {
+            opacity: 0,
+            x: -18,
+            duration: 0.48,
+            stagger: 0.018,
+          },
+          cursor + 0.95,
+        )
+        .to(
+          backdrop,
+          {
+            opacity: 1,
+            filter: 'brightness(1) saturate(1)',
+            duration: 0.7,
+            ease: 'power2.inOut',
+          },
+          cursor + 0.9,
+        )
+        .to(
+          closingUi,
+          {
+            opacity: 0,
+            y: -12,
+            duration: 0.5,
+            stagger: 0.025,
+            ease: 'power2.in',
+          },
+          cursor + 1.68,
+        )
+    }, overlay)
+
+    const refreshFrame = window.requestAnimationFrame(() => {
+      ScrollTrigger.refresh()
+    })
+
+    return () => {
+      window.cancelAnimationFrame(refreshFrame)
+      setCollectionProjectsActive(false)
+      context.revert()
+    }
+  }, [collectionOpen, collectionReady])
+
+
+  useLayoutEffect(() => {
+    const context = gsap.context(() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const cards = gsap.utils.toArray('.carousel-card')
+      const otherCards = cards.slice(1)
+
+      const setCardGeometry = () => {
+        const mobile = window.innerWidth <= 700
+        const cardWidth = mobile
+          ? Math.min(window.innerWidth * 0.72, 300)
+          : Math.min(window.innerWidth * 0.235, 350)
+        const cardHeight = cardWidth * 1.38
+        const cardGap = mobile ? 28 : 56
+        const radius =
+          (cardWidth + cardGap) /
+          (2 * Math.sin(Math.PI / carouselCards.length))
+
+        root.current?.style.setProperty('--carousel-card-width', `${cardWidth}px`)
+        root.current?.style.setProperty('--carousel-card-height', `${cardHeight}px`)
+        root.current?.style.setProperty('--carousel-radius', `${radius}px`)
+        root.current?.style.setProperty('--video-scale-x', `${cardWidth / window.innerWidth}`)
+        root.current?.style.setProperty('--video-scale-y', `${cardHeight / window.innerHeight}`)
+      }
+
+      setCardGeometry()
+
+      if (reduceMotion) {
+        gsap.set('.hero-interface, .carousel-interface, .carousel-card', { clearProps: 'all' })
+        return
+      }
+
+      gsap.set('[data-reveal]', { y: 32, opacity: 0 })
+      gsap.set('.expertise-card', { y: 38, opacity: 0 })
+      gsap.set('.carousel-interface', { opacity: 0 })
+      gsap.set(otherCards, { opacity: 0 })
+      gsap.set('.home-card', { opacity: 0 })
+      gsap.set(carouselRing.current, { rotationY: 0 })
+
+      const intro = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      intro
+        .from('.site-header', { y: -24, opacity: 0, duration: 0.8 })
+        .to('[data-reveal]', {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          stagger: 0.09,
+        }, '-=0.35')
+        .to('.expertise-card', {
+          y: 0,
+          opacity: 1,
+          duration: 0.85,
+          stagger: 0.08,
+        }, '-=0.55')
+
+      const experienceTimeline = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: experience.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.7,
+          invalidateOnRefresh: true,
+          onRefreshInit: setCardGeometry,
+          onUpdate: (self) => {
+            const carouselProgress = clamp((self.progress - 0.145) / 0.855, 0, 1)
+            const nextIndex = Math.round(carouselProgress * (carouselCards.length - 1))
+            setActiveCard((current) => (current === nextIndex ? current : nextIndex))
+          },
+        },
+      })
+
+      experienceTimeline
+        .to('.hero-interface', {
+          opacity: 0,
+          y: -28,
+          filter: 'blur(10px)',
+          duration: 0.035,
+          pointerEvents: 'none',
+        }, 0.012)
+        .to('.video-atmosphere', {
+          width: () =>
+            getComputedStyle(root.current)
+              .getPropertyValue('--carousel-card-width')
+              .trim(),
+          height: () =>
+            getComputedStyle(root.current)
+              .getPropertyValue('--carousel-card-height')
+              .trim(),
+          borderRadius: '1.45rem',
+          boxShadow: '0 36px 110px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.22)',
+          duration: 0.105,
+          ease: 'power3.inOut',
+        }, 0.025)
+        .to('.video-vignette, .video-grain', {
+          opacity: 0,
+          duration: 0.055,
+          ease: 'power2.out',
+        }, 0.06)
+        .to('.carousel-interface', {
+          opacity: 1,
+          duration: 0.04,
+        }, 0.082)
+        .to(otherCards, {
+          opacity: 1,
+          duration: 0.045,
+          stagger: 0.0015,
+        }, 0.092)
+        .to('.home-card', {
+          opacity: 1,
+          duration: 0.018,
+        }, 0.112)
+        .to('.video-atmosphere', {
+          opacity: 0,
+          duration: 0.025,
+          pointerEvents: 'none',
+        }, 0.122)
+        .to('.home-card .carousel-card-shade, .home-card .carousel-card-content', {
+          opacity: 1,
+          duration: 0.025,
+          ease: 'power2.out',
+        }, 0.132)
+        .to(carouselRing.current, {
+          rotationY: -angleStep * (carouselCards.length - 1),
+          duration: 0.855,
+          ease: 'none',
+        }, 0.145)
+
+      const onResize = () => {
+        setCardGeometry()
+        ScrollTrigger.refresh()
+      }
+
+      window.addEventListener('resize', onResize)
+
+      return () => {
+        window.removeEventListener('resize', onResize)
+      }
+    }, root)
+
+    return () => context.revert()
+  }, [angleStep])
+
+  const handleCardPointer = (event) => {
+    const card = event.currentTarget
+    const rect = card.getBoundingClientRect()
+    card.style.setProperty('--pointer-x', `${event.clientX - rect.left}px`)
+    card.style.setProperty('--pointer-y', `${event.clientY - rect.top}px`)
+    card.style.setProperty('--rotate-x', `${((event.clientY - rect.top) / rect.height - 0.5) * -4}deg`)
+    card.style.setProperty('--rotate-y', `${((event.clientX - rect.left) / rect.width - 0.5) * 5}deg`)
+  }
+
+  const resetCard = (event) => {
+    const card = event.currentTarget
+    card.style.setProperty('--rotate-x', '0deg')
+    card.style.setProperty('--rotate-y', '0deg')
+  }
+
+  const active = carouselCards[activeCard]
+
+  return (
+    <div className="site" ref={root}>
+      <div className="black-foundation" aria-hidden="true" />
+
+      <section className="experience" id="home" ref={experience}>
+        <div className="experience-sticky" ref={stickyStage}>
+          <div className={`video-atmosphere ${videoReady ? 'is-ready' : ''}`} aria-hidden="true">
+            <video
+              ref={heroVideo}
+              className="hero-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              poster="/assets/hero-neon-poster.png"
+              onCanPlay={() => setVideoReady(true)}
+            >
+              <source src="/assets/hero-neon.mp4" type="video/mp4" />
+            </video>
+            <div className="video-vignette" />
+            <div className="video-grain" />
+          </div>
+
+          <div className="hero-interface">
+            <header className="site-header">
+              <a className="monogram" href="#home" aria-label="John Wolf home">
+                JW<span>.</span>
+              </a>
+
+              <button
+                className="menu-toggle"
+                type="button"
+                aria-expanded={menuOpen}
+                aria-controls="primary-navigation"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <span />
+                <span />
+                <span />
+                <span className="sr-only">Toggle navigation</span>
+              </button>
+
+              <nav
+                className={`primary-navigation ${menuOpen ? 'is-open' : ''}`}
+                id="primary-navigation"
+                aria-label="Primary navigation"
+              >
+                {navigation.map((item, index) => (
+                  <a
+                    className={index === 0 ? 'is-active' : ''}
+                    href={`#${item.toLowerCase()}`}
+                    key={item}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item}
+                  </a>
+                ))}
+              </nav>
+
+              <button className="header-cta" type="button" onClick={() => scrollToSection('#contact')}>
+                Start a Project
+                <span aria-hidden="true">↗</span>
+              </button>
+            </header>
+
+            <div className="hero-layout">
+              <div className="hero-copy">
+                <p className="eyebrow" data-reveal>
+                  Independent graphic designer
+                </p>
+
+                <h1 data-reveal>
+                  John <span>Wolf</span>
+                </h1>
+
+                <p className="role" data-reveal>
+                  Graphic Designer <span aria-hidden="true">+</span> Visual Storyteller
+                </p>
+
+                <p className="hero-statement" data-reveal>
+                  I transform ideas into bold visual identities, immersive digital experiences,
+                  and design systems built to leave a lasting impression.
+                </p>
+
+                <div className="hero-actions" data-reveal>
+                  <button className="button button-primary" type="button" onClick={() => scrollToSection('#portfolio')}>
+                    Explore Selected Work
+                    <span aria-hidden="true">→</span>
+                  </button>
+                  <button className="button button-secondary" type="button" onClick={() => scrollToSection('#about')}>
+                    Discover My Approach
+                  </button>
+                </div>
+
+                <div className="availability" data-reveal>
+                  <span className="availability-dot" />
+                  Available for select branding and web projects
+                </div>
+              </div>
+
+              <aside className="hero-index" aria-label="Current scene">
+                <span>01</span>
+                <div />
+                <p>Identity<br />in motion</p>
+              </aside>
+            </div>
+
+            <div className="expertise-grid">
+              {expertise.map((item, index) => (
+                <article
+                  className="expertise-card"
+                  key={item.title}
+                  onPointerMove={handleCardPointer}
+                  onPointerLeave={resetCard}
+                >
+                  <span className="card-number">0{index + 1}</span>
+                  <div className="icon-shell">
+                    <ExpertiseIcon name={item.icon} />
+                  </div>
+                  <div>
+                    <h2>{item.title}</h2>
+                    <p>{item.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <button className="scroll-cue" type="button" onClick={() => window.scrollBy({ top: window.innerHeight, behavior: 'smooth' })}>
+              <span>Scroll to enter</span>
+              <i aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="carousel-interface" id="portfolio">
+            <div className="carousel-heading">
+              <p>02 / Design archive</p>
+              <h2>Move through the work.</h2>
+            </div>
+
+            <div className="carousel-active-copy" aria-live="polite">
+              <span>{String(activeCard + 1).padStart(2, '0')} / {carouselCards.length}</span>
+              <p>{active.eyebrow}</p>
+              <h3>{active.title}</h3>
+              <div className="active-rule" />
+              <small>{active.description}</small>
+            </div>
+
+            <div className="carousel-viewport" aria-label="Graphic design portfolio categories">
+              <div className="carousel-ring" ref={carouselRing}>
+                {carouselCards.map((card, index) => (
+                  <article
+                    ref={card.title === 'Brand Guidelines' ? brandGuidelinesCard : undefined}
+                    className={`carousel-card ${index === 0 ? 'home-card' : ''} ${activeCard === index ? 'is-active' : ''} ${card.title === 'Brand Guidelines' ? 'is-collection-trigger' : ''}`}
+                    style={{ '--card-index': index, '--card-angle': `${index * angleStep}deg` }}
+                    key={card.title}
+                    aria-label={card.title}
+                    role={card.title === 'Brand Guidelines' ? 'button' : undefined}
+                    aria-haspopup={card.title === 'Brand Guidelines' ? 'dialog' : undefined}
+                    aria-expanded={card.title === 'Brand Guidelines' ? collectionOpen : undefined}
+                    tabIndex={
+                      card.title === 'Brand Guidelines'
+                        ? activeCard === index
+                          ? 0
+                          : -1
+                        : undefined
+                    }
+                    onClick={(event) => {
+                      if (
+                        card.title === 'Brand Guidelines' &&
+                        activeCard === index
+                      ) {
+                        openBrandGuidelines(event)
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        card.title === 'Brand Guidelines' &&
+                        activeCard === index &&
+                        (event.key === 'Enter' || event.key === ' ')
+                      ) {
+                        event.preventDefault()
+                        openBrandGuidelines(event)
+                      }
+                    }}
+                  >
+                    <div className="carousel-card-video">
+                      <video
+                        ref={
+                          index === 0
+                            ? homeCardVideo
+                            : card.title === 'Brand Guidelines'
+                              ? brandGuidelinesVideo
+                              : undefined
+                        }
+                        muted
+                        loop
+                        playsInline
+                        preload={index === 0 ? 'auto' : 'metadata'}
+                        poster={card.poster}
+                        aria-hidden="true"
+                      >
+                        <source src={card.video} type="video/mp4" />
+                      </video>
+                      <div className="carousel-card-shade" />
+                    </div>
+
+                    <div className="carousel-card-content">
+                      <p>{card.eyebrow}</p>
+                      <h3>{card.title}</h3>
+                      <span>View collection ↗</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="carousel-scroll-note">
+              <span>Continue scrolling</span>
+              <i />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="next-stage" id="about">
+        <p>Scene 03</p>
+        <h2>The next transformation begins here.</h2>
+        <span>
+          This black stage is reserved for the transition that will follow the final Contact card.
+        </span>
+      </section>
+
+      <section className="anchor-section" id="services" aria-hidden="true" />
+      <section className="anchor-section" id="testimonials" aria-hidden="true" />
+      <section className="anchor-section" id="contact" aria-hidden="true" />
+
+      {collectionOpen && (
+        <section
+          className="collection-overlay"
+          ref={collectionOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Brand Guidelines project archive"
+          tabIndex={-1}
+          data-lenis-prevent
+        >
+          <div
+            className="collection-story"
+            ref={collectionStory}
+            style={{
+              height: `${(brandGuidelineProjects.length + 4) * 100}svh`,
+            }}
+          >
+            <div className="collection-stage" ref={collectionStage}>
+              <div className="collection-backdrop">
+                <video
+                  ref={collectionBackdropVideo}
+                  className="collection-backdrop-video"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster="/assets/carousel/brand-guidelines.jpg"
+                  aria-hidden="true"
+                >
+                  <source
+                    src="/assets/carousel/brand-guidelines.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+
+                <div className="collection-backdrop-shade" />
+
+                <header className="collection-topbar">
+                  <span className="collection-monogram">
+                    JW<span>.</span>
+                  </span>
+
+                  <nav
+                    className="collection-navigation"
+                    aria-label="Archive navigation decoration"
+                  >
+                    {navigation.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </nav>
+                </header>
+
+                <div className="collection-title">
+                  <p>03 / Selected systems</p>
+                  <h2>
+                    Brand
+                    <br />
+                    Guidelines
+                  </h2>
+                  <span>Hover to reveal each project</span>
+                </div>
+
+                <div className="collection-project-wall">
+                  <div className="collection-marquee collection-marquee--top">
+                    <div className="collection-marquee-track">
+                      <div className="collection-marquee-segment">
+                        {brandGuidelineProjects.slice(0, 7).map((project) => (
+                          <article
+                            className="collection-thumb"
+                            key={`top-a-${project.title}`}
+                          >
+                            <img src={project.image} alt="" />
+                            <span className="collection-thumb-name">
+                              {project.title}
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+
+                      <div
+                        className="collection-marquee-segment"
+                        aria-hidden="true"
+                      >
+                        {brandGuidelineProjects.slice(0, 7).map((project) => (
+                          <article
+                            className="collection-thumb"
+                            key={`top-b-${project.title}`}
+                          >
+                            <img src={project.image} alt="" />
+                            <span className="collection-thumb-name">
+                              {project.title}
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="collection-marquee collection-marquee--bottom">
+                    <div className="collection-marquee-track">
+                      <div className="collection-marquee-segment">
+                        {brandGuidelineProjects.slice(7).map((project) => (
+                          <article
+                            className="collection-thumb"
+                            key={`bottom-a-${project.title}`}
+                          >
+                            <img src={project.image} alt="" />
+                            <span className="collection-thumb-name">
+                              {project.title}
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+
+                      <div
+                        className="collection-marquee-segment"
+                        aria-hidden="true"
+                      >
+                        {brandGuidelineProjects.slice(7).map((project) => (
+                          <article
+                            className="collection-thumb"
+                            key={`bottom-b-${project.title}`}
+                          >
+                            <img src={project.image} alt="" />
+                            <span className="collection-thumb-name">
+                              {project.title}
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="collection-mobile-grid">
+                    {brandGuidelineProjects.map((project) => (
+                      <article
+                        className="collection-thumb"
+                        key={`mobile-${project.title}`}
+                      >
+                        <img src={project.image} alt="" />
+                        <span className="collection-thumb-name">
+                          {project.title}
+                        </span>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <aside
+                className="collection-history"
+                aria-label="Viewed Brand Guidelines projects"
+              >
+                {brandGuidelineProjects.map((project, index) => (
+                  <div
+                    className="collection-history-item"
+                    key={`history-${project.title}`}
+                  >
+                    <img src={project.image} alt="" />
+
+                    <span>
+                      <small>{String(index + 1).padStart(2, '0')}</small>
+                      {project.title}
+                    </span>
+                  </div>
+                ))}
+              </aside>
+
+              <div className="collection-feature-layer">
+                {brandGuidelineProjects.map((project, index) => (
+                  <figure
+                    className="collection-feature-card"
+                    key={`feature-${project.title}`}
+                  >
+                    <img
+                      src={project.image}
+                      alt={`${project.title} brand guidelines project`}
+                      loading={index < 3 ? 'eager' : 'lazy'}
+                    />
+
+                    <figcaption>
+                      <span>
+                        {String(index + 1).padStart(2, '0')} /{' '}
+                        {brandGuidelineProjects.length}
+                      </span>
+                      <h3>{project.title}</h3>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+
+              <button
+                className={`collection-close ${collectionProjectsActive ? 'is-visible' : ''}`}
+                type="button"
+                aria-label="Return to the Brand Guidelines overview"
+                onClick={returnToCollectionOverview}
+              >
+                <span />
+                <span />
+              </button>
+
+              <div className="collection-scroll-guide">
+                <span>Scroll to explore projects</span>
+                <i />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}

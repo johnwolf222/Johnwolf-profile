@@ -1,0 +1,532 @@
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
+import ExpertiseIcon from './components/ExpertiseIcon.jsx'
+
+gsap.registerPlugin(ScrollTrigger)
+
+const navigation = ['Home', 'About', 'Services', 'Portfolio', 'Testimonials', 'Contact']
+
+const expertise = [
+  {
+    icon: 'identity',
+    title: 'Brand Identity',
+    body: 'Distinctive logos, typography, color systems, and visual standards built for recognition.',
+  },
+  {
+    icon: 'digital',
+    title: 'Digital Experiences',
+    body: 'Purposeful websites and interactive visuals shaped through design, motion, and usability.',
+  },
+  {
+    icon: 'campaign',
+    title: 'Campaign Creative',
+    body: 'Launch graphics, advertisements, and social content designed to command attention.',
+  },
+  {
+    icon: 'partnership',
+    title: 'Creative Partnership',
+    body: 'Thoughtful design support from the first strategic idea through polished final delivery.',
+  },
+]
+
+const carouselCards = [
+  {
+    title: 'Home',
+    eyebrow: 'Opening scene',
+    description: 'Return to the beginning of the experience.',
+    type: 'video',
+  },
+  {
+    title: 'Logos',
+    eyebrow: 'Identity marks',
+    description: 'Distinctive symbols and signature systems made to be remembered.',
+  },
+  {
+    title: 'Brand Guidelines',
+    eyebrow: 'Visual systems',
+    description: 'Rules that keep every brand expression clear, consistent, and recognizable.',
+  },
+  {
+    title: 'Websites',
+    eyebrow: 'Digital experiences',
+    description: 'Immersive interfaces that turn strong ideas into intuitive experiences.',
+  },
+  {
+    title: 'Illustrations',
+    eyebrow: 'Custom artwork',
+    description: 'Original visuals built to give campaigns and stories their own character.',
+  },
+  {
+    title: 'Packaging',
+    eyebrow: 'Product presence',
+    description: 'Shelf-ready design that makes the product feel considered before it is opened.',
+  },
+  {
+    title: 'Social Campaigns',
+    eyebrow: 'Attention systems',
+    description: 'Connected campaign visuals designed to stop the scroll and strengthen recall.',
+  },
+  {
+    title: 'Print Design',
+    eyebrow: 'Physical media',
+    description: 'Editorial, promotional, and event materials shaped with tactile precision.',
+  },
+  {
+    title: 'Typography',
+    eyebrow: 'Voice in form',
+    description: 'Type-led compositions that make language feel as intentional as the message.',
+  },
+  {
+    title: 'Motion Design',
+    eyebrow: 'Design in time',
+    description: 'Movement, rhythm, and transformation used to make visual stories feel alive.',
+  },
+  {
+    title: 'Creative Direction',
+    eyebrow: 'Unified vision',
+    description: 'A clear visual point of view carried from the first concept through delivery.',
+  },
+  {
+    title: 'Photo Composites',
+    eyebrow: 'Constructed worlds',
+    description: 'Layered image-making that bends reality without losing believability.',
+  },
+  {
+    title: 'Case Studies',
+    eyebrow: 'Process revealed',
+    description: 'A closer look at the decisions, systems, and craft behind selected projects.',
+  },
+  {
+    title: 'About',
+    eyebrow: 'The designer',
+    description: 'The thinking, standards, and experience behind the work.',
+  },
+  {
+    title: 'Contact',
+    eyebrow: 'Start something',
+    description: 'Bring the idea. We will shape the visual experience around it.',
+  },
+]
+
+function scrollToSection(id) {
+  document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export default function App() {
+  const root = useRef(null)
+  const experience = useRef(null)
+  const stickyStage = useRef(null)
+  const heroVideo = useRef(null)
+  const homeCardVideo = useRef(null)
+  const carouselRing = useRef(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const [activeCard, setActiveCard] = useState(0)
+
+  const angleStep = useMemo(() => 360 / carouselCards.length, [])
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) return undefined
+
+    const lenis = new Lenis({
+      duration: 1.08,
+      smoothWheel: true,
+      syncTouch: false,
+    })
+
+    lenis.on('scroll', ScrollTrigger.update)
+    const update = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(update)
+    gsap.ticker.lagSmoothing(0)
+
+    return () => {
+      gsap.ticker.remove(update)
+      lenis.destroy()
+    }
+  }, [])
+
+  useEffect(() => {
+    const source = heroVideo.current
+    const destination = homeCardVideo.current
+    if (!source || !destination) return undefined
+
+    const alignVideos = () => {
+      if (Number.isFinite(source.currentTime) && Math.abs(destination.currentTime - source.currentTime) > 0.35) {
+        destination.currentTime = source.currentTime
+      }
+      destination.play().catch(() => {})
+    }
+
+    source.addEventListener('playing', alignVideos)
+    destination.addEventListener('canplay', alignVideos)
+    alignVideos()
+
+    return () => {
+      source.removeEventListener('playing', alignVideos)
+      destination.removeEventListener('canplay', alignVideos)
+    }
+  }, [videoReady])
+
+  useLayoutEffect(() => {
+    const context = gsap.context(() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const cards = gsap.utils.toArray('.carousel-card')
+      const otherCards = cards.slice(1)
+
+      const setCardGeometry = () => {
+        const mobile = window.innerWidth <= 700
+        const cardWidth = mobile
+          ? Math.min(window.innerWidth * 0.72, 300)
+          : Math.min(window.innerWidth * 0.235, 350)
+        const cardHeight = cardWidth * 1.38
+        const cardGap = mobile ? 28 : 56
+        const radius =
+          (cardWidth + cardGap) /
+          (2 * Math.sin(Math.PI / carouselCards.length))
+
+        root.current?.style.setProperty('--carousel-card-width', `${cardWidth}px`)
+        root.current?.style.setProperty('--carousel-card-height', `${cardHeight}px`)
+        root.current?.style.setProperty('--carousel-radius', `${radius}px`)
+        root.current?.style.setProperty('--video-scale-x', `${cardWidth / window.innerWidth}`)
+        root.current?.style.setProperty('--video-scale-y', `${cardHeight / window.innerHeight}`)
+      }
+
+      setCardGeometry()
+
+      if (reduceMotion) {
+        gsap.set('.hero-interface, .carousel-interface, .carousel-card', { clearProps: 'all' })
+        return
+      }
+
+      gsap.set('[data-reveal]', { y: 32, opacity: 0 })
+      gsap.set('.expertise-card', { y: 38, opacity: 0 })
+      gsap.set('.carousel-interface', { opacity: 0 })
+      gsap.set(otherCards, { opacity: 0 })
+      gsap.set('.home-card', { opacity: 0 })
+      gsap.set(carouselRing.current, { rotationY: 0 })
+
+      const intro = gsap.timeline({ defaults: { ease: 'power3.out' } })
+      intro
+        .from('.site-header', { y: -24, opacity: 0, duration: 0.8 })
+        .to('[data-reveal]', {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          stagger: 0.09,
+        }, '-=0.35')
+        .to('.expertise-card', {
+          y: 0,
+          opacity: 1,
+          duration: 0.85,
+          stagger: 0.08,
+        }, '-=0.55')
+
+      const experienceTimeline = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: experience.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.7,
+          invalidateOnRefresh: true,
+          onRefreshInit: setCardGeometry,
+          onUpdate: (self) => {
+            const carouselProgress = clamp((self.progress - 0.145) / 0.855, 0, 1)
+            const nextIndex = Math.round(carouselProgress * (carouselCards.length - 1))
+            setActiveCard((current) => (current === nextIndex ? current : nextIndex))
+          },
+        },
+      })
+
+      experienceTimeline
+        .to('.hero-interface', {
+          opacity: 0,
+          y: -28,
+          filter: 'blur(10px)',
+          duration: 0.035,
+          pointerEvents: 'none',
+        }, 0.012)
+        .to('.video-atmosphere', {
+          scaleX: () => Number.parseFloat(getComputedStyle(root.current).getPropertyValue('--video-scale-x')),
+          scaleY: () => Number.parseFloat(getComputedStyle(root.current).getPropertyValue('--video-scale-y')),
+          borderRadius: '1.45rem',
+          boxShadow: '0 36px 110px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.22)',
+          duration: 0.105,
+          ease: 'power3.inOut',
+        }, 0.025)
+        .to('.carousel-interface', {
+          opacity: 1,
+          duration: 0.04,
+        }, 0.082)
+        .to(otherCards, {
+          opacity: 1,
+          duration: 0.045,
+          stagger: 0.0015,
+        }, 0.092)
+        .to('.home-card', {
+          opacity: 1,
+          duration: 0.012,
+        }, 0.119)
+        .to('.video-atmosphere', {
+          opacity: 0,
+          duration: 0.012,
+          pointerEvents: 'none',
+        }, 0.128)
+        .to(carouselRing.current, {
+          rotationY: -angleStep * (carouselCards.length - 1),
+          duration: 0.855,
+          ease: 'none',
+        }, 0.145)
+
+      const onResize = () => {
+        setCardGeometry()
+        ScrollTrigger.refresh()
+      }
+
+      window.addEventListener('resize', onResize)
+
+      return () => {
+        window.removeEventListener('resize', onResize)
+      }
+    }, root)
+
+    return () => context.revert()
+  }, [angleStep])
+
+  const handleCardPointer = (event) => {
+    const card = event.currentTarget
+    const rect = card.getBoundingClientRect()
+    card.style.setProperty('--pointer-x', `${event.clientX - rect.left}px`)
+    card.style.setProperty('--pointer-y', `${event.clientY - rect.top}px`)
+    card.style.setProperty('--rotate-x', `${((event.clientY - rect.top) / rect.height - 0.5) * -4}deg`)
+    card.style.setProperty('--rotate-y', `${((event.clientX - rect.left) / rect.width - 0.5) * 5}deg`)
+  }
+
+  const resetCard = (event) => {
+    const card = event.currentTarget
+    card.style.setProperty('--rotate-x', '0deg')
+    card.style.setProperty('--rotate-y', '0deg')
+  }
+
+  const active = carouselCards[activeCard]
+
+  return (
+    <div className="site" ref={root}>
+      <div className="black-foundation" aria-hidden="true" />
+
+      <section className="experience" id="home" ref={experience}>
+        <div className="experience-sticky" ref={stickyStage}>
+          <div className={`video-atmosphere ${videoReady ? 'is-ready' : ''}`} aria-hidden="true">
+            <video
+              ref={heroVideo}
+              className="hero-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              poster="/assets/hero-neon-poster.png"
+              onCanPlay={() => setVideoReady(true)}
+            >
+              <source src="/assets/hero-neon.mp4" type="video/mp4" />
+            </video>
+            <div className="video-vignette" />
+            <div className="video-grain" />
+          </div>
+
+          <div className="hero-interface">
+            <header className="site-header">
+              <a className="monogram" href="#home" aria-label="John Wolf home">
+                JW<span>.</span>
+              </a>
+
+              <button
+                className="menu-toggle"
+                type="button"
+                aria-expanded={menuOpen}
+                aria-controls="primary-navigation"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <span />
+                <span />
+                <span />
+                <span className="sr-only">Toggle navigation</span>
+              </button>
+
+              <nav
+                className={`primary-navigation ${menuOpen ? 'is-open' : ''}`}
+                id="primary-navigation"
+                aria-label="Primary navigation"
+              >
+                {navigation.map((item, index) => (
+                  <a
+                    className={index === 0 ? 'is-active' : ''}
+                    href={`#${item.toLowerCase()}`}
+                    key={item}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item}
+                  </a>
+                ))}
+              </nav>
+
+              <button className="header-cta" type="button" onClick={() => scrollToSection('#contact')}>
+                Start a Project
+                <span aria-hidden="true">↗</span>
+              </button>
+            </header>
+
+            <div className="hero-layout">
+              <div className="hero-copy">
+                <p className="eyebrow" data-reveal>
+                  Independent graphic designer
+                </p>
+
+                <h1 data-reveal>
+                  John <span>Wolf</span>
+                </h1>
+
+                <p className="role" data-reveal>
+                  Graphic Designer <span aria-hidden="true">+</span> Visual Storyteller
+                </p>
+
+                <p className="hero-statement" data-reveal>
+                  I transform ideas into bold visual identities, immersive digital experiences,
+                  and design systems built to leave a lasting impression.
+                </p>
+
+                <div className="hero-actions" data-reveal>
+                  <button className="button button-primary" type="button" onClick={() => scrollToSection('#portfolio')}>
+                    Explore Selected Work
+                    <span aria-hidden="true">→</span>
+                  </button>
+                  <button className="button button-secondary" type="button" onClick={() => scrollToSection('#about')}>
+                    Discover My Approach
+                  </button>
+                </div>
+
+                <div className="availability" data-reveal>
+                  <span className="availability-dot" />
+                  Available for select branding and web projects
+                </div>
+              </div>
+
+              <aside className="hero-index" aria-label="Current scene">
+                <span>01</span>
+                <div />
+                <p>Identity<br />in motion</p>
+              </aside>
+            </div>
+
+            <div className="expertise-grid">
+              {expertise.map((item, index) => (
+                <article
+                  className="expertise-card"
+                  key={item.title}
+                  onPointerMove={handleCardPointer}
+                  onPointerLeave={resetCard}
+                >
+                  <span className="card-number">0{index + 1}</span>
+                  <div className="icon-shell">
+                    <ExpertiseIcon name={item.icon} />
+                  </div>
+                  <div>
+                    <h2>{item.title}</h2>
+                    <p>{item.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <button className="scroll-cue" type="button" onClick={() => window.scrollBy({ top: window.innerHeight, behavior: 'smooth' })}>
+              <span>Scroll to enter</span>
+              <i aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="carousel-interface" id="portfolio">
+            <div className="carousel-heading">
+              <p>02 / Design archive</p>
+              <h2>Move through the work.</h2>
+            </div>
+
+            <div className="carousel-active-copy" aria-live="polite">
+              <span>{String(activeCard + 1).padStart(2, '0')} / {carouselCards.length}</span>
+              <p>{active.eyebrow}</p>
+              <h3>{active.title}</h3>
+              <div className="active-rule" />
+              <small>{active.description}</small>
+            </div>
+
+            <div className="carousel-viewport" aria-label="Graphic design portfolio categories">
+              <div className="carousel-ring" ref={carouselRing}>
+                {carouselCards.map((card, index) => (
+                  <article
+                    className={`carousel-card ${index === 0 ? 'home-card' : ''} ${activeCard === index ? 'is-active' : ''}`}
+                    style={{ '--card-index': index, '--card-angle': `${index * angleStep}deg` }}
+                    key={card.title}
+                    aria-label={card.title}
+                  >
+                    {card.type === 'video' ? (
+                      <div className="carousel-card-video">
+                        <video
+                          ref={homeCardVideo}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="auto"
+                          poster="/assets/hero-neon-poster.png"
+                        >
+                          <source src="/assets/hero-neon.mp4" type="video/mp4" />
+                        </video>
+                        <div className="carousel-card-shade" />
+                      </div>
+                    ) : (
+                      <div className="placeholder-art" aria-hidden="true">
+                        <span className="art-orbit art-orbit--one" />
+                        <span className="art-orbit art-orbit--two" />
+                        <span className="art-line" />
+                        <strong>{String(index + 1).padStart(2, '0')}</strong>
+                      </div>
+                    )}
+
+                    <div className="carousel-card-content">
+                      <p>{card.eyebrow}</p>
+                      <h3>{card.title}</h3>
+                      <span>View collection ↗</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="carousel-scroll-note">
+              <span>Continue scrolling</span>
+              <i />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="next-stage" id="about">
+        <p>Scene 03</p>
+        <h2>The next transformation begins here.</h2>
+        <span>
+          This white stage is reserved for the transition that will follow the final Contact card.
+        </span>
+      </section>
+
+      <section className="anchor-section" id="services" aria-hidden="true" />
+      <section className="anchor-section" id="testimonials" aria-hidden="true" />
+      <section className="anchor-section" id="contact" aria-hidden="true" />
+    </div>
+  )
+}

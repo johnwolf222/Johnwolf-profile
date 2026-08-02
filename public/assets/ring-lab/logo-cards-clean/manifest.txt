@@ -1,0 +1,33 @@
+01	logo-card-01.png	Firefly_Gemini Flash_clean up the logo. keep background 927210.png
+02	logo-card-02.png	Firefly_Gemini Flash_create for a logo drone business called -PROSCAN-. city background. following aesthet 624616.png
+03	logo-card-03.png	Firefly_Gemini Flash_recreare 927210 (1).png
+04	logo-card-04.png	Firefly_Gemini Flash_recreare 927210 (2).png
+05	logo-card-05.png	Firefly_Gemini Flash_recreare 927210 (3).png
+06	logo-card-06.png	Firefly_Gemini Flash_recreare 927210.png
+07	logo-card-07.png	Firefly_Gemini Flash_recreate 624616 (1).png
+08	logo-card-08.png	Firefly_Gemini Flash_recreate 624616 (2).png
+09	logo-card-09.png	Firefly_Gemini Flash_recreate 624616.png
+10	logo-card-10.png	Firefly_Gemini Flash_recreate 927210 (1).png
+11	logo-card-11.png	Firefly_Gemini Flash_recreate 927210 (2).png
+12	logo-card-12.png	Firefly_Gemini Flash_recreate 927210 (3).png
+13	logo-card-13.png	Firefly_Gemini Flash_recreate 927210 (4).png
+14	logo-card-14.png	Firefly_Gemini Flash_recreate 927210 (5).png
+15	logo-card-15.png	Firefly_Gemini Flash_recreate 927210 (6).png
+16	logo-card-16.png	Firefly_Gemini Flash_recreate 927210.png
+17	logo-card-17.png	Firefly_Gemini Flash_recreate, center both logos 624616.png
+18	logo-card-18.png	Firefly_Gemini Flash_recreate, logo centered 927210 (1).png
+19	logo-card-19.png	Firefly_Gemini Flash_recreate, logo centered 927210.png
+20	logo-card-20.png	Firefly_Gemini Flash_recreate, remove lower right logo 927210 (1).png
+21	logo-card-21.png	Firefly_Gemini Flash_recreate, remove lower right logo 927210.png
+22	logo-card-22.png	Firefly_Gemini Flash_recreate, remove lower right logo_ 718713.png
+23	logo-card-23.png	Firefly_Gemini Flash_recreate, white background bottom banner text -N • S • C- 927210.png
+24	logo-card-24.png	Firefly_Gemini Flash_remove lower block, color hex and lower logo 927210.png
+25	logo-card-25.png	Firefly_gpt-image_image 2 in the background of image 1 718713.png
+26	logo-card-26.png	Firefly_gpt-image_recreate 624616.png
+27	logo-card-27.png	Firefly_gpt-image_recreate 666853.png
+28	logo-card-28.png	Firefly_gpt-image_recreate 718713.png
+29	logo-card-29.png	Firefly_gpt-image_recreate, remove watermark and lower right logo. 624616 (1).png
+30	logo-card-30.png	Firefly_gpt-image_recreate, remove watermark and lower right logo. 624616.png
+31	logo-card-31.png	Firefly_gpt-image_remove watermark and lower right logo. background black 666853.png
+32	logo-card-32.jpg	IMG_hwbsb0.jpg
+33	logo-card-33.jpg	jpg_20220425_075239_0000_Original.jpg
