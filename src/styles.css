@@ -2041,3 +2041,168 @@ a:focus-visible {
   font-size: 0.68rem;
 }
 
+
+/* ===== HERO VIEWPORT CORRECTIONS: START ===== */
+
+/* Hide the visible browser scrollbar without disabling scrolling. */
+html,
+body,
+#root {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/*
+  Tablet layouts use two expertise-card rows. Increase the hero's minimum
+  height so both rows remain visible. Mobile at 620px and below is unchanged.
+*/
+@media (min-width: 621px) and (max-width: 1120px) {
+  .experience-sticky {
+    height: 100svh;
+    min-height: 680px;
+  }
+
+  .hero-interface {
+    height: 100%;
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .hero-layout {
+    align-self: center;
+    gap: 1rem;
+    padding: 0.5rem 1vw 0.65rem;
+  }
+
+  .hero-copy {
+    width: min(43rem, 100%);
+  }
+
+  .eyebrow {
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(3.7rem, 8.5vw, 5.6rem);
+  }
+
+  .role {
+    margin: 0.8rem 0 0.65rem;
+    font-size: clamp(1.2rem, 2.5vw, 1.75rem);
+  }
+
+  .hero-statement {
+    max-width: 36rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .hero-actions {
+    gap: 0.65rem;
+    margin-top: 0.95rem;
+  }
+
+  .button {
+    min-height: 3rem;
+    padding: 0.8rem 1.2rem;
+  }
+
+  .availability {
+    margin-top: 0.7rem;
+  }
+
+  .expertise-grid {
+    gap: 0.6rem;
+  }
+
+  .expertise-card {
+    min-height: 0;
+    gap: 0.7rem;
+    padding: 0.72rem 0.85rem;
+    border-radius: 1rem;
+  }
+
+  .icon-shell {
+    width: 2.35rem;
+    height: 2.35rem;
+    margin-top: 0;
+    border-radius: 0.65rem;
+  }
+
+  .expertise-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .expertise-card h2 {
+    margin-bottom: 0.2rem;
+    font-size: 0.84rem;
+  }
+
+  .expertise-card p {
+    font-size: 0.67rem;
+    line-height: 1.35;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 820px) {
+  .hero-layout {
+    padding: 3.35rem 0 0.55rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(3.55rem, 13vw, 5rem);
+  }
+
+  .role {
+    font-size: clamp(1.15rem, 4vw, 1.55rem);
+  }
+
+  .hero-statement {
+    font-size: 0.84rem;
+    line-height: 1.42;
+  }
+
+  .button {
+    min-height: 2.85rem;
+    padding: 0.7rem 1rem;
+  }
+}
+
+/* ===== HERO VIEWPORT CORRECTIONS: END ===== */
+
+/* ===== CAROUSEL HEADING HEADER CLEARANCE: START ===== */
+
+/* Keep the Design Archive heading beneath the fixed global navigation. */
+@media (min-width: 821px) {
+  .carousel-heading {
+    top: 6.25rem;
+  }
+}
+
+/* Tablet navigation is slightly shorter. */
+@media (min-width: 621px) and (max-width: 820px) {
+  .carousel-heading {
+    top: 5.65rem;
+  }
+}
+
+/* Keep the mobile Design Archive heading below the fixed navigation. */
+@media (max-width: 620px) {
+  .carousel-heading {
+    top: 5.45rem;
+    left: 1rem;
+  }
+}
+
+/* ===== CAROUSEL HEADING HEADER CLEARANCE: END ===== */

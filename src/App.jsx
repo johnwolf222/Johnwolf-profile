@@ -1268,7 +1268,7 @@ export default function App() {
                     <span aria-hidden="true">→</span>
                   </button>
                   <button className="button button-secondary" type="button" onClick={() => scrollToSection('#about')}>
-                    Discover My Approach
+                    Let's Get Started
                   </button>
                 </div>
 
@@ -1277,12 +1277,6 @@ export default function App() {
                   Available for select branding and web projects
                 </div>
               </div>
-
-              <aside className="hero-index" aria-label="Current scene">
-                <span>01</span>
-                <div />
-                <p>Identity<br />in motion</p>
-              </aside>
             </div>
 
             <div className="expertise-grid">
@@ -1293,7 +1287,6 @@ export default function App() {
                   onPointerMove={handleCardPointer}
                   onPointerLeave={resetCard}
                 >
-                  <span className="card-number">0{index + 1}</span>
                   <div className="icon-shell">
                     <ExpertiseIcon name={item.icon} />
                   </div>
