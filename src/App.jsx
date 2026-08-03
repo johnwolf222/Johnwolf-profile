@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import ExpertiseIcon from './components/ExpertiseIcon.jsx'
+import BrandVault from './components/BrandVault.jsx'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -222,6 +223,7 @@ export default function App() {
   const [videoReady, setVideoReady] = useState(false)
   const [activeCard, setActiveCard] = useState(0)
   const [brandPageOpen, setBrandPageOpen] = useState(false)
+  const [brandVaultOpen, setBrandVaultOpen] = useState(false)
   const [brandProjectIndex, setBrandProjectIndex] = useState(0)
 
   const angleStep = useMemo(() => 360 / carouselCards.length, [])
@@ -248,6 +250,7 @@ export default function App() {
         ? video.currentTime
         : 0
 
+    setBrandVaultOpen(false)
     setBrandProjectIndex(0)
     setActiveNavigation('Portfolio')
     setBrandPageOpen(true)
@@ -1511,13 +1514,9 @@ export default function App() {
 
                   <button
                     type="button"
-                    aria-label={`Open ${activeBrandProject.title} brand guidelines PDF`}
+                    aria-label={`Open ${activeBrandProject.title} in the Brand Vault`}
                     onClick={() => {
-                      window.open(
-                        activeBrandProject.pdf,
-                        '_blank',
-                        'noopener,noreferrer',
-                      )
+                      setBrandVaultOpen(true)
                     }}
                   >
                     View Project
@@ -1678,6 +1677,22 @@ export default function App() {
           </div>
         </section>
       )}
+
+      <BrandVault
+        open={
+          brandPageOpen &&
+          brandVaultOpen
+        }
+        project={activeBrandProject}
+        projects={brandGuidelineProjects}
+        activeIndex={brandProjectIndex}
+        onClose={() => {
+          setBrandVaultOpen(false)
+        }}
+        onSelectProject={(index) => {
+          setBrandProjectIndex(index)
+        }}
+      />
     </div>
   )
 }
