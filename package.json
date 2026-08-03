@@ -12,6 +12,7 @@
     "@vitejs/plugin-react": "latest",
     "gsap": "latest",
     "lenis": "latest",
+    "pdfjs-dist": "6.2.108",
     "react": "latest",
     "react-dom": "latest",
     "three": "0.180.0",
